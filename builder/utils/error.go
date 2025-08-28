@@ -2,7 +2,6 @@ package utils
 
 import (
 	"fmt"
-	"runtime"
 	"sync/atomic"
 )
 
@@ -32,14 +31,6 @@ func IsTraceError() bool {
 	return errorTracingEnabled.Load()
 }
 
-func getFileLine(skip int) string {
-	if _, file, line, ok := runtime.Caller(int(skip) + 1); ok && line > 0 {
-		return fmt.Sprintf("%s:%d", file, line)
-	} else {
-		return ""
-	}
-}
-
 type Error struct {
 	message string
 	code    int
@@ -47,28 +38,26 @@ type Error struct {
 }
 
 func (p *Error) Error() string {
-	if p == nil {
-		return ""
+	if p != nil {
+		return p.message
 	}
 
-	return p.message
+	return ""
 }
 
 func (p *Error) SetCode(code int) error {
-	if p == nil {
-		return nil
+	if p != nil {
+		p.code = code
 	}
 
-	p.code = code
 	return p
 }
 
 func (p *Error) AddHeader(format string, args ...any) error {
-	if p == nil {
-		return nil
+	if p != nil {
+		p.message = fmt.Sprintf(format, args...) + ": " + p.message
 	}
 
-	p.message = fmt.Sprintf(format, args...) + ": " + p.message
 	return p
 }
 
@@ -118,9 +107,11 @@ func WrapError(err error) *Error {
 
 func DebugError(err error) string {
 	e := convertToError(err)
-	ret := e.message
-	for _, trace := range e.traces {
-		ret += "\n\t" + trace
+	ret := fmt.Sprintf("Message: %s\n", e.message)
+	ret += fmt.Sprintf("Code: %d\n", e.code)
+
+	for i := len(e.traces) - 1; i >= 0; i-- {
+		ret += fmt.Sprintf("\t[Stack %04d]: %s\n", i+1, e.traces[i])
 	}
 	return ret
 }
