@@ -1,0 +1,25 @@
+name: Lint
+
+on:
+  push:
+    branches:
+      - master
+      - dev
+
+jobs:
+  golangci:
+    strategy:
+      matrix:
+        go-version: [1.24.x]
+        platform: [windows-latest, ubuntu-latest, macos-latest]
+
+    runs-on: ${{ matrix.platform }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v2.5.2
+        with:
+          args: --timeout 5m0s
