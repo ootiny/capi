@@ -5,7 +5,6 @@ import (
 )
 
 func TestFirstError(t *testing.T) {
-
 	t.Run("all errors is nil", func(t *testing.T) {
 		assert := NewAssert(t)
 		assert(FirstError(nil, nil, nil)).Equals(nil)
