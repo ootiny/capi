@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -94,5 +95,42 @@ func Test_Errorf(t *testing.T) {
 		assert(err.message).Equals("error message")
 		assert(err.code).Equals(ErrCodeGeneral)
 		assert(len(err.traces)).Equals(0)
+	})
+}
+
+func Test_WrapError(t *testing.T) {
+	t.Run("error is nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(WrapError(nil)).Equals(nil)
+	})
+
+	t.Run("error is not nil, trace on", func(t *testing.T) {
+		SetTraceError(true)
+		assert := NewAssert(t)
+		err1 := WrapError(Errorf("error message"))
+		assert(err1.message).Equals("error message")
+		assert(err1.code).Equals(ErrCodeGeneral)
+		assert(len(err1.traces)).Equals(2)
+		assert(strings.Contains(err1.traces[1], "builder/utils/error_test.go")).IsTrue()
+
+		err2 := WrapError(fmt.Errorf("error2"))
+		assert(err2.message).Equals("error2")
+		assert(err2.code).Equals(ErrCodeGeneral)
+		assert(len(err2.traces)).Equals(1)
+		assert(strings.Contains(err2.traces[0], "builder/utils/error_test.go")).IsTrue()
+	})
+
+	t.Run("error is not nil, trace off", func(t *testing.T) {
+		SetTraceError(false)
+		assert := NewAssert(t)
+		err1 := WrapError(Errorf("error message"))
+		assert(err1.message).Equals("error message")
+		assert(err1.code).Equals(ErrCodeGeneral)
+		assert(len(err1.traces)).Equals(0)
+
+		err2 := WrapError(fmt.Errorf("error2"))
+		assert(err2.message).Equals("error2")
+		assert(err2.code).Equals(ErrCodeGeneral)
+		assert(len(err2.traces)).Equals(0)
 	})
 }
