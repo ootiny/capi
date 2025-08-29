@@ -9,12 +9,12 @@ import (
 // Assert ...
 type Assert struct {
 	t    interface{ Fail() }
-	args []interface{}
+	args []any
 }
 
 // NewAssert ...
-func NewAssert(t interface{ Fail() }) func(args ...interface{}) *Assert {
-	return func(args ...interface{}) *Assert {
+func NewAssert(t interface{ Fail() }) func(args ...any) *Assert {
+	return func(args ...any) *Assert {
 		return &Assert{
 			t:    t,
 			args: args,
@@ -33,7 +33,7 @@ func (p *Assert) Fail(reason string) {
 }
 
 // Equals ...
-func (p *Assert) Equals(args ...interface{}) {
+func (p *Assert) Equals(args ...any) {
 	if len(p.args) < 1 {
 		p.fail("arguments is empty")
 	} else if len(p.args) != len(args) {

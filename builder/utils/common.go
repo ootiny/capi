@@ -55,7 +55,7 @@ func addPrefixPerLine(text string, prefix string) string {
 	return sb.String()
 }
 
-func isNil(val interface{}) (ret bool) {
+func isNil(val any) (ret bool) {
 	defer func() {
 		if e := recover(); e != nil {
 			ret = false
