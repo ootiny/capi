@@ -134,3 +134,27 @@ func Test_WrapError(t *testing.T) {
 		assert(len(err2.traces)).Equals(0)
 	})
 }
+
+func Test_DebugError(t *testing.T) {
+	t.Run("error is nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(DebugError(nil)).Equals("")
+	})
+
+	t.Run("error is not nil, trace on", func(t *testing.T) {
+		SetTraceError(true)
+		assert := NewAssert(t)
+		debugMessage := DebugError(Errorf("error %d", 19))
+
+		assert(strings.Contains(debugMessage, "Message: error 19")).IsTrue()
+		assert(strings.Contains(debugMessage, fmt.Sprintf("Code: %d", ErrCodeGeneral))).IsTrue()
+		assert(strings.Contains(debugMessage, "builder/utils/error_test.go")).IsTrue()
+	})
+
+	t.Run("error is not nil, trace off", func(t *testing.T) {
+		SetTraceError(false)
+		assert := NewAssert(t)
+		debugMessage := DebugError(Errorf("error message"))
+		assert(debugMessage).Equals("Message: error message\nCode: 1\n")
+	})
+}

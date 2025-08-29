@@ -107,6 +107,10 @@ func WrapError(err error) *Error {
 
 func DebugError(err error) string {
 	e := convertToError(err)
+	if e == nil {
+		return ""
+	}
+
 	ret := fmt.Sprintf("Message: %s\n", e.message)
 	ret += fmt.Sprintf("Code: %d\n", e.code)
 
