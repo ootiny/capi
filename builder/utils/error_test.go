@@ -1,34 +1,23 @@
 package utils
 
 import (
-	"fmt"
 	"testing"
 )
 
-func TestError(t *testing.T) {
-	SetTraceError(true)
-	defer SetTraceError(false)
+func TestFirstError(t *testing.T) {
 
-}
+	t.Run("all errors is nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(FirstError(nil, nil, nil)).Equals(nil)
+	})
 
-func TestWrapError(t *testing.T) {
-	SetTraceError(true)
-	defer SetTraceError(false)
+	t.Run("first error is not nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(FirstError(nil, Errorf("error"), nil)).Equals(Errorf("error"))
+	})
 
-	err := WrapError(nil)
-	if err != nil {
-		t.Fatal(err)
-	}
-
-	err = WrapError(fmt.Errorf("test error"))
-	if err == nil {
-		t.Fatal("expect error")
-	}
-
-	err = WrapError(err)
-	if err == nil {
-		t.Fatal("expect error")
-	}
-
-	t.Log(DebugError(err))
+	t.Run("first error is  nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(FirstError(Errorf("error1"), nil, Errorf("error2"))).Equals(Errorf("error1"))
+	})
 }
