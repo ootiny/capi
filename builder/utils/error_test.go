@@ -53,6 +53,18 @@ func Test_Error_Error(t *testing.T) {
 	})
 }
 
+func Test_Error_Code(t *testing.T) {
+	t.Run("error is nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert((*Error)(nil).Code()).Equals(0)
+	})
+
+	t.Run("error is not nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(Errorf("error message").SetCode(12).Code()).Equals(ErrCodeGeneral)
+	})
+}
+
 func Test_Error_SetCode(t *testing.T) {
 	t.Run("error is nil", func(t *testing.T) {
 		assert := NewAssert(t)
@@ -61,7 +73,8 @@ func Test_Error_SetCode(t *testing.T) {
 
 	t.Run("error is not nil", func(t *testing.T) {
 		assert := NewAssert(t)
-		assert(Errorf("error message").SetCode(2)).Equals(Errorf("error message").SetCode(2))
+		err := Errorf("error message").SetCode(2)
+		assert(err.code).Equals(2)
 	})
 }
 

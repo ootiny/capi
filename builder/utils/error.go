@@ -45,7 +45,15 @@ func (p *Error) Error() string {
 	return ""
 }
 
-func (p *Error) SetCode(code int) error {
+func (p *Error) Code() int {
+	if p != nil {
+		return p.code
+	}
+
+	return 0
+}
+
+func (p *Error) SetCode(code int) *Error {
 	if p != nil {
 		p.code = code
 	}
