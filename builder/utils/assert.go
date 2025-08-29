@@ -23,9 +23,7 @@ func NewAssert(t interface{ Fail() }) func(args ...interface{}) *Assert {
 }
 
 func (p *Assert) fail(reason string) {
-	_, _ = os.Stdout.WriteString(
-		fmt.Sprintf("\t%s\n\t%s\n", reason, getFileLine(2)),
-	)
+	_, _ = fmt.Fprintf(os.Stdout, "\t%s\n\t%s\n", reason, getFileLine(2))
 	p.t.Fail()
 }
 
