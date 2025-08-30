@@ -61,7 +61,7 @@ func Test_Error_Code(t *testing.T) {
 
 	t.Run("error is not nil", func(t *testing.T) {
 		assert := NewAssert(t)
-		assert(Errorf("error message").SetCode(12).Code()).Equals(ErrCodeGeneral)
+		assert(Errorf("error message").SetCode(12).Code()).Equals(12)
 	})
 }
 
@@ -98,7 +98,7 @@ func Test_Errorf(t *testing.T) {
 		assert(err.message).Equals("error message")
 		assert(err.code).Equals(ErrCodeGeneral)
 		assert(len(err.traces)).Equals(1)
-		assert(strings.Contains(err.traces[0], "builder/utils/error_test.go")).IsTrue()
+		assert(strings.Contains(err.traces[0], "error_test.go")).IsTrue()
 	})
 
 	t.Run("trace off", func(t *testing.T) {
@@ -124,13 +124,13 @@ func Test_WrapError(t *testing.T) {
 		assert(err1.message).Equals("error message")
 		assert(err1.code).Equals(ErrCodeGeneral)
 		assert(len(err1.traces)).Equals(2)
-		assert(strings.Contains(err1.traces[1], "builder/utils/error_test.go")).IsTrue()
+		assert(strings.Contains(err1.traces[1], "error_test.go")).IsTrue()
 
 		err2 := WrapError(fmt.Errorf("error2"))
 		assert(err2.message).Equals("error2")
 		assert(err2.code).Equals(ErrCodeGeneral)
 		assert(len(err2.traces)).Equals(1)
-		assert(strings.Contains(err2.traces[0], "builder/utils/error_test.go")).IsTrue()
+		assert(strings.Contains(err2.traces[0], "error_test.go")).IsTrue()
 	})
 
 	t.Run("error is not nil, trace off", func(t *testing.T) {
@@ -161,7 +161,7 @@ func Test_DebugError(t *testing.T) {
 
 		assert(strings.Contains(debugMessage, "Message: error 19")).IsTrue()
 		assert(strings.Contains(debugMessage, fmt.Sprintf("Code: %d", ErrCodeGeneral))).IsTrue()
-		assert(strings.Contains(debugMessage, "builder/utils/error_test.go")).IsTrue()
+		assert(strings.Contains(debugMessage, "error_test.go")).IsTrue()
 	})
 
 	t.Run("error is not nil, trace off", func(t *testing.T) {

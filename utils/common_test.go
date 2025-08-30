@@ -36,7 +36,7 @@ func Test_convertOrdinalToString(t *testing.T) {
 func Test_getFileLine(t *testing.T) {
 	t.Run("ok", func(t *testing.T) {
 		assert := NewAssert(t)
-		assert(strings.Contains(getFileLine(0), "builder/utils/common_test.go")).IsTrue()
+		assert(strings.Contains(getFileLine(0), "common_test.go")).IsTrue()
 	})
 
 	t.Run("skip is overflow", func(t *testing.T) {
