@@ -27,45 +27,6 @@ const MainLocation = "main"
 const DBPrefix = "DB."
 const APIPrefix = "API."
 
-func TimeStringToDuration(timeStr string) (time.Duration, error) {
-	s := strings.TrimSpace(timeStr)
-	if s == "" {
-		return 0, fmt.Errorf("time string is empty")
-	}
-
-	// Validate the whole string first: sequences like 1h30m, 2d, 5m, etc.
-	full := regexp.MustCompile(`(?i)^\s*(\d+\s*[dhms])+\s*$`)
-	if !full.MatchString(s) {
-		return 0, fmt.Errorf("invalid time string: %s", timeStr)
-	}
-
-	// Extract all number+unit parts and accumulate.
-	partRe := regexp.MustCompile(`(?i)(\d+)\s*([dhms])`)
-	parts := partRe.FindAllStringSubmatch(s, -1)
-	var total time.Duration
-	for _, p := range parts {
-		n, err := strconv.ParseInt(p[1], 10, 64)
-		if err != nil {
-			return 0, fmt.Errorf("invalid time string: %s", timeStr)
-		}
-		var unit time.Duration
-		switch strings.ToLower(p[2]) {
-		case "d":
-			unit = 24 * time.Hour
-		case "h":
-			unit = time.Hour
-		case "m":
-			unit = time.Minute
-		case "s":
-			unit = time.Second
-		default:
-			return 0, fmt.Errorf("invalid time string: %s", timeStr)
-		}
-		total += time.Duration(n) * unit
-	}
-	return total, nil
-}
-
 var DBBaseTypes = []string{
 	"PK", "Bool", "Int64", "Float64",
 	"String", "String16", "String32", "String64", "String256",
@@ -195,6 +156,45 @@ func UnmarshalConfig(filePath string, v any) error {
 	}
 }
 
+func TimeStringToDuration(timeStr string) (time.Duration, error) {
+	s := strings.TrimSpace(timeStr)
+	if s == "" {
+		return 0, fmt.Errorf("time string is empty")
+	}
+
+	// Validate the whole string first: sequences like 1h30m, 2d, 5m, etc.
+	full := regexp.MustCompile(`(?i)^\s*(\d+\s*[dhms])+\s*$`)
+	if !full.MatchString(s) {
+		return 0, fmt.Errorf("invalid time string: %s", timeStr)
+	}
+
+	// Extract all number+unit parts and accumulate.
+	partRe := regexp.MustCompile(`(?i)(\d+)\s*([dhms])`)
+	parts := partRe.FindAllStringSubmatch(s, -1)
+	var total time.Duration
+	for _, p := range parts {
+		n, err := strconv.ParseInt(p[1], 10, 64)
+		if err != nil {
+			return 0, fmt.Errorf("invalid time string: %s", timeStr)
+		}
+		var unit time.Duration
+		switch strings.ToLower(p[2]) {
+		case "d":
+			unit = 24 * time.Hour
+		case "h":
+			unit = time.Hour
+		case "m":
+			unit = time.Minute
+		case "s":
+			unit = time.Second
+		default:
+			return 0, fmt.Errorf("invalid time string: %s", timeStr)
+		}
+		total += time.Duration(n) * unit
+	}
+	return total, nil
+}
+
 func WriteJSONFile(filePath string, v any) error {
 	if err := os.MkdirAll(filepath.Dir(filePath), 0755); err != nil {
 		return fmt.Errorf("failed to create directory: %w", err)
@@ -280,4 +280,40 @@ func GetViewHash(viewIndex uint64, data string) string {
 	h := md5.Sum([]byte(data))
 	// 仅取前 6 字节（48 bit），编码成不带填充的 base64，得到正好 8 个字符
 	return string(buf) + base64.RawStdEncoding.EncodeToString(h[:6])
+}
+
+func ParseProjectDir(filePath string, projectDir string) (string, error) {
+	// Check for project directory placeholders in the filePath
+	patterns := []string{
+		"$projectdir",
+		"$projectDir",
+		"${ProjectDir}",
+		"$ProjectDir",
+		"$project",
+		"$Project",
+		"${projectDir}",
+		"${projectdir}",
+		"${Project}",
+		"${project}",
+	}
+
+	result := filePath
+
+	for _, pattern := range patterns {
+		if strings.HasPrefix(filePath, pattern) {
+			result = strings.Replace(result, pattern, projectDir, 1)
+			break
+		}
+	}
+
+	// If result is a relative path, convert it to an absolute path
+	if !filepath.IsAbs(result) {
+		if absPath, err := filepath.Abs(result); err != nil {
+			return "", fmt.Errorf("failed to convert path to absolute path: %w", err)
+		} else {
+			result = absPath
+		}
+	}
+
+	return result, nil
 }

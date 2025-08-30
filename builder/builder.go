@@ -6,7 +6,6 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 )
 
 type IBuilder interface {
@@ -21,42 +20,6 @@ type BuildContext struct {
 	apiConfigs []*APIConfig
 	dbConfigs  []*TableConfig
 	output     *RTOutputConfig
-}
-
-func ParseProjectDir(filePath string, projectDir string) (string, error) {
-	// Check for project directory placeholders in the filePath
-	patterns := []string{
-		"$projectdir",
-		"$projectDir",
-		"${ProjectDir}",
-		"$ProjectDir",
-		"$project",
-		"$Project",
-		"${projectDir}",
-		"${projectdir}",
-		"${Project}",
-		"${project}",
-	}
-
-	result := filePath
-
-	for _, pattern := range patterns {
-		if strings.HasPrefix(filePath, pattern) {
-			result = strings.Replace(result, pattern, projectDir, 1)
-			break
-		}
-	}
-
-	// If result is a relative path, convert it to an absolute path
-	if !filepath.IsAbs(result) {
-		if absPath, err := filepath.Abs(result); err != nil {
-			return "", fmt.Errorf("failed to convert path to absolute path: %w", err)
-		} else {
-			result = absPath
-		}
-	}
-
-	return result, nil
 }
 
 func Output() error {
