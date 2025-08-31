@@ -250,7 +250,7 @@ func (p *DBTableMeta) ToDBTable() (*DBTable, error) {
 func LoadDBTableMeta(filePath string) (*DBTableMeta, error) {
 	var meta DBTableMeta
 	if err := UnmarshalConfig(filePath, &meta); err != nil {
-		return nil, fmt.Errorf("failed to parse config file: %w", err)
+		return nil, fmt.Errorf("failed to parse meta file: %w", err)
 	} else {
 		meta.__filepath__ = filePath
 		return &meta, nil

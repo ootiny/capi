@@ -27,7 +27,7 @@ func (c *RTConfig) GetFilePath() string {
 	return c.__filepath__
 }
 
-func LoadRtConfig() (*RTConfig, error) {
+func LoadRTConfig() (*RTConfig, error) {
 	configPath := ""
 
 	if len(os.Args) > 1 {

@@ -23,7 +23,7 @@ type BuildContext struct {
 }
 
 func Build() error {
-	rtConfig, err := LoadRtConfig()
+	rtConfig, err := LoadRTConfig()
 	if err != nil {
 		log.Panicf("Failed to load config: %v", err)
 	}
