@@ -22,7 +22,7 @@ type BuildContext struct {
 	output     *RTOutputConfig
 }
 
-func Output() error {
+func Build() error {
 	rtConfig, err := LoadRtConfig()
 	if err != nil {
 		log.Panicf("Failed to load config: %v", err)
