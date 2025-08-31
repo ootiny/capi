@@ -351,12 +351,7 @@ func (p *GoBuilder) buildServerWithConfig(apiConfig *APIConfig) error {
 func (p *GoBuilder) buildDB() error {
 	assetDir := filepath.Join(p.output.Dir, "db")
 
-	config := map[string]any{
-		"database": p.rtConfig.Database,
-		"cache":    p.rtConfig.Cache,
-	}
-
-	if err := WriteJSONFile(filepath.Join(assetDir, "config.json"), config); err != nil {
+	if err := WriteJSONFile(filepath.Join(assetDir, "config.json"), p.rtConfig.DB); err != nil {
 		return fmt.Errorf("failed to write assets file: %v", err)
 	}
 

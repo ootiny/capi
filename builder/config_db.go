@@ -1,5 +1,25 @@
 package builder
 
+type DBConnectConfig struct {
+	Driver   string `json:"driver" required:"true"`
+	Host     string `json:"host" required:"true"`
+	Port     uint16 `json:"port" required:"true"`
+	User     string `json:"user" required:"true"`
+	Password string `json:"password" required:"true"`
+	DBName   string `json:"dbName" required:"true"`
+}
+
+type DBCacheConfig struct {
+	Type string `json:"type" required:"true"`
+	Size string `json:"size" required:"true"`
+	Addr string `json:"addr"`
+}
+
+type DBConfig struct {
+	Connect *DBConnectConfig `json:"connect" required:"true"`
+	Cache   *DBCacheConfig   `json:"cache" required:"true"`
+}
+
 type DBTableColumn struct {
 	Type      string          `json:"type"`
 	QueryMap  map[string]bool `json:"queryMap"`

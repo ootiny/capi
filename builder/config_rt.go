@@ -383,26 +383,10 @@ type RTOutputConfig struct {
 	HttpEngine string `json:"httpEngine"`
 }
 
-type RTDatabaseConfig struct {
-	Driver   string `json:"driver" required:"true"`
-	Host     string `json:"host" required:"true"`
-	Port     uint16 `json:"port" required:"true"`
-	User     string `json:"user" required:"true"`
-	Password string `json:"password" required:"true"`
-	DBName   string `json:"dbName" required:"true"`
-}
-
-type RTCacheConfig struct {
-	Type string `json:"type" required:"true"`
-	Size string `json:"size" required:"true"`
-	Addr string `json:"addr"`
-}
-
 type RTConfig struct {
 	Listen       string            `json:"listen"`
 	Outputs      []*RTOutputConfig `json:"outputs"`
-	Database     *RTDatabaseConfig `json:"database"`
-	Cache        *RTCacheConfig    `json:"cache"`
+	DB           *DBConfig         `json:"db"`
 	__filepath__ string
 }
 
