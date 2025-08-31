@@ -71,32 +71,40 @@ type GoBuilder struct {
 func (p *GoBuilder) Prepare() error {
 	switch p.output.Kind {
 	case "server":
-		assetEgineFile := fmt.Sprintf("assets/go/%s", goEngineMap[p.output.HttpEngine])
-		assetCommonFile := "assets/go/server_common.go"
-
 		if err := os.RemoveAll(p.output.Dir); err != nil {
 			return fmt.Errorf("failed to remove system dir: %v", err)
 		} else if err := os.MkdirAll(p.output.Dir, 0755); err != nil {
 			return fmt.Errorf("failed to create system dir: %v", err)
-		} else if engineContent, err := assets.ReadFile(assetEgineFile); err != nil {
-			return fmt.Errorf("failed to read assets file: %v", err)
-		} else if commonContent, err := assets.ReadFile(assetCommonFile); err != nil {
-			return fmt.Errorf("failed to read assets file: %v", err)
 		} else {
-			// replace package name or namespace if needed
-			replaceName := "package _rt_package_name_"
-			replaceContent := fmt.Sprintf("package %s", p.output.GoPackage)
-			engineContent = []byte(strings.ReplaceAll(string(engineContent), replaceName, replaceContent))
-			commonContent = []byte(strings.ReplaceAll(string(commonContent), replaceName, replaceContent))
+			copyFiles := []string{
+				fmt.Sprintf("assets/go/%s", goEngineMap[p.output.HttpEngine]),
+				"assets/go/server_common.go",
+				"assets/go/pub_error.go",
+			}
 
-			if err := WriteGeneratedFile(filepath.Join(p.output.Dir, "engine.go"), string(engineContent)); err != nil {
-				return fmt.Errorf("failed to write assets file: %v", err)
-			} else if err := WriteGeneratedFile(filepath.Join(p.output.Dir, "common.go"), string(commonContent)); err != nil {
-				return fmt.Errorf("failed to write assets file: %v", err)
-			} else {
-				return nil
+			packageReplace := [][2]string{
+				{"package _rt_package_name_", fmt.Sprintf("package %s", p.output.GoPackage)},
+			}
+
+			for _, copyFile := range copyFiles {
+				if fileContent, err := assets.ReadFile(copyFile); err != nil {
+					return fmt.Errorf("failed to read assets file: %v", err)
+				} else {
+					for _, replace := range packageReplace {
+						fileContent = []byte(strings.ReplaceAll(string(fileContent), replace[0], replace[1]))
+					}
+
+					if err := WriteGeneratedFile(
+						filepath.Join(p.output.Dir, filepath.Base(copyFile)),
+						string(fileContent),
+					); err != nil {
+						return fmt.Errorf("failed to write assets file: %v", err)
+					}
+				}
 			}
 		}
+
+		return nil
 	case "client":
 		return fmt.Errorf("not implemented")
 	default:
@@ -187,22 +195,26 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 				strings.Join(attributes, "\n"),
 			))
 
+			// fmt.Sprintf("%s.Error", p.output.GoPackage)
+
 			if strings.HasPrefix(apiMeta.Namespace, DBPrefix) {
 				defines = append(defines, fmt.Sprintf(
 					"type %sBytes = []byte",
 					name,
 				))
 				defines = append(defines, fmt.Sprintf(
-					"func Unmarshal%s(data []byte, v *%s) error {\n\t return %s.JsonUnmarshal(data, v)\n}",
+					"func Unmarshal%s(data []byte, v *%s) *%s.Error {\n\t return %s.JsonUnmarshal(data, v)\n}",
 					name,
 					name,
 					p.output.GoPackage,
+					p.output.GoPackage,
 				))
 				defines = append(defines, fmt.Sprintf(
-					"func %sBytesTo%s(data []byte) (*%s, error) {\n\tvar v %s\n\tif err := %s.JsonUnmarshal(data, &v); err != nil {\n\t\treturn nil, err\n\t}\n\treturn &v, nil\n}\n",
+					"func %sBytesTo%s(data []byte) (*%s, *%s.Error) {\n\tvar v %s\n\tif err := %s.JsonUnmarshal(data, &v); err != nil {\n\t\treturn nil, err\n\t}\n\treturn &v, nil\n}\n",
 					name,
 					name,
 					name,
+					p.output.GoPackage,
 					name,
 					p.output.GoPackage,
 				))
@@ -251,9 +263,9 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 				imports = append(imports, typePkg)
 			}
 
-			returnStr := fmt.Sprintf("%s.Error", p.output.GoPackage)
+			returnStr := fmt.Sprintf("*%s.Error", p.output.GoPackage)
 			if returnType != "" {
-				returnStr = fmt.Sprintf("(%s, %s.Error)", returnType, p.output.GoPackage)
+				returnStr = fmt.Sprintf("(%s, *%s.Error)", returnType, p.output.GoPackage)
 			}
 
 			actions = append(actions, fmt.Sprintf(
@@ -290,13 +302,13 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 			)
 			if returnType == "" {
 				funcBody += fmt.Sprintf(
-					" else if err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.GetCode(), Message: err.Error()}\n\t\t}",
+					" else if err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.Code(), Message: err.Error()}\n\t\t}",
 					name, strings.Join(callParameters, ", "), p.output.GoPackage,
 				)
 				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{}\n\t\t}", p.output.GoPackage)
 			} else {
 				funcBody += fmt.Sprintf(
-					" else if result, err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.GetCode(), Message: err.Error()}\n\t\t}",
+					" else if result, err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.Code(), Message: err.Error()}\n\t\t}",
 					name, strings.Join(callParameters, ", "), p.output.GoPackage,
 				)
 				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{Data: result}\n\t\t}", p.output.GoPackage)

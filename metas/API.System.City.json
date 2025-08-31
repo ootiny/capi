@@ -1,0 +1,50 @@
+{
+  "version": "rt.api.v1",
+  "namespace": "API.System.City",
+  "description": "City API",
+  "definitions": {
+    "CityList": {
+      "description": "A city",
+      "attributes": [
+        {
+          "name": "from",
+          "type": "Int64",
+          "required": true,
+          "description": "The name of the city"
+        },
+        {
+          "name": "list",
+          "type": "List<DB.City@Full>",
+          "required": true,
+          "description": "The location of the city"
+        }
+      ]
+    }
+  },
+  "actions": {
+    "Test": {
+      "description": "Test",
+      "method": "GET",
+      "return": {
+        "type": "List<DB.City@Simple>",
+        "description": "The city"
+      }
+    },
+    "GetCityList": {
+      "description": "Get city list",
+      "method": "GET",
+      "parameters": [
+        {
+          "name": "country",
+          "type": "String",
+          "required": true,
+          "description": "The country of the city"
+        }
+      ],
+      "return": {
+        "type": "API.System.City@CityList",
+        "description": "The city"
+      }
+    }
+  }
+}
