@@ -83,17 +83,17 @@ func (p *TypescriptBuilder) BuildServer() error {
 }
 
 func (p *TypescriptBuilder) BuildClient() error {
-	configs := []*APIMeta{}
-	configs = append(configs, p.apiConfigs...)
-	for _, dbConfig := range p.dbConfigs {
+	metas := []*APIMeta{}
+	metas = append(metas, p.apiMetas...)
+	for _, dbConfig := range p.dbMetas {
 		if apiConfig, err := dbConfig.ToAPIMeta(); err != nil {
 			return err
 		} else {
-			configs = append(configs, apiConfig)
+			metas = append(metas, apiConfig)
 		}
 	}
 
-	rootNode := MakeAPIConfigTree(configs)
+	rootNode := MakeAPIConfigTree(metas)
 	if rootNode == nil {
 		// no api found
 		return nil

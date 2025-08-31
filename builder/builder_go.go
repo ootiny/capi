@@ -113,19 +113,19 @@ func (p *GoBuilder) BuildServer() error {
 		return err
 	}
 
-	configs := []*APIMeta{}
-	configs = append(configs, p.apiConfigs...)
+	metas := []*APIMeta{}
+	metas = append(metas, p.apiMetas...)
 
-	for _, dbConfig := range p.dbConfigs {
-		if apiConfig, err := dbConfig.ToAPIMeta(); err != nil {
+	for _, dbMeta := range p.dbMetas {
+		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
 			return err
 		} else {
-			configs = append(configs, apiConfig)
+			metas = append(metas, apiMeta)
 		}
 	}
 
-	for _, apiConfig := range configs {
-		if err := p.buildServerWithConfig(apiConfig); err != nil {
+	for _, apiMeta := range metas {
+		if err := p.buildServerWithMeta(apiMeta); err != nil {
 			return err
 		}
 	}
@@ -133,12 +133,12 @@ func (p *GoBuilder) BuildServer() error {
 	return nil
 }
 
-func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
-	if apiConfig.Namespace == "" {
+func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
+	if apiMeta.Namespace == "" {
 		return fmt.Errorf("namespace is required")
 	}
 
-	currentPackage := NamespaceToFolder(p.location, apiConfig.Namespace)
+	currentPackage := NamespaceToFolder(p.location, apiMeta.Namespace)
 
 	outDir := filepath.Join(p.output.Dir, currentPackage)
 	if err := os.MkdirAll(outDir, 0755); err != nil {
@@ -158,10 +158,10 @@ func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
 	needImportBasePackage := false
 
 	// definitions
-	for name, define := range apiConfig.Definitions {
+	for name, define := range apiMeta.Definitions {
 		if len(define.Attributes) > 0 {
 			attributes := []string{}
-			fullDefineName := apiConfig.Namespace + "@" + name
+			fullDefineName := apiMeta.Namespace + "@" + name
 			for _, attribute := range define.Attributes {
 				attrType, pkg := toGolangType(p.location, p.output.GoModule, currentPackage, attribute.Type)
 				if pkg != "" {
@@ -187,7 +187,7 @@ func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
 				strings.Join(attributes, "\n"),
 			))
 
-			if strings.HasPrefix(apiConfig.Namespace, DBPrefix) {
+			if strings.HasPrefix(apiMeta.Namespace, DBPrefix) {
 				defines = append(defines, fmt.Sprintf(
 					"type %sBytes = []byte",
 					name,
@@ -213,10 +213,10 @@ func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
 	}
 
 	// actions
-	if len(apiConfig.Actions) > 0 {
+	if len(apiMeta.Actions) > 0 {
 		needImportBasePackage = true
 
-		for name, action := range apiConfig.Actions {
+		for name, action := range apiMeta.Actions {
 			parameters := []string{
 				fmt.Sprintf("ctx *%s.Context", p.output.GoPackage),
 			}
@@ -224,7 +224,7 @@ func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
 			callParameters := []string{
 				"ctx",
 			}
-			fullActionName := apiConfig.Namespace + ":" + name
+			fullActionName := apiMeta.Namespace + ":" + name
 			for _, parameter := range action.Parameters {
 				typeName, typePkg := toGolangType(p.location, p.output.GoModule, currentPackage, parameter.Type)
 				if typePkg != "" {
@@ -356,10 +356,10 @@ func (p *GoBuilder) buildDB() error {
 	}
 
 	tableDir := filepath.Join(assetDir, "tables")
-	for _, dbConfig := range p.dbConfigs {
-		if dbTableConfig, err := dbConfig.ToDBTable(); err != nil {
+	for _, dbMeta := range p.dbMetas {
+		if dbTable, err := dbMeta.ToDBTable(); err != nil {
 			return err
-		} else if err := WriteJSONFile(filepath.Join(tableDir, fmt.Sprintf("%s.json", dbConfig.Table)), dbTableConfig); err != nil {
+		} else if err := WriteJSONFile(filepath.Join(tableDir, fmt.Sprintf("%s.json", dbMeta.Table)), dbTable); err != nil {
 			return fmt.Errorf("failed to write assets file: %v", err)
 		}
 	}

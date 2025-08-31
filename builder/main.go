@@ -15,25 +15,25 @@ type IBuilder interface {
 }
 
 type BuildContext struct {
-	location   string
-	rtConfig   *RTConfig
-	apiConfigs []*APIMeta
-	dbConfigs  []*DBTableMeta
-	output     *RTOutputConfig
+	location string
+	rtConfig *RTConfig
+	apiMetas []*APIMeta
+	dbMetas  []*DBTableMeta
+	output   *RTOutputConfig
 }
 
 func Build() error {
 	rtConfig, err := LoadRTConfig()
 	if err != nil {
-		log.Panicf("Failed to load config: %v", err)
+		log.Panicf("Failed to load capi config: %v", err)
 	}
 
 	projectDir := filepath.Dir(rtConfig.GetFilePath())
-	log.Printf("rt: project dir: %s\n", projectDir)
-	log.Printf("rt: config file: %s\n", rtConfig.GetFilePath())
+	log.Printf("capi: project dir: %s\n", projectDir)
+	log.Printf("capi: meta file: %s\n", rtConfig.GetFilePath())
 
-	apiConfigs := []*APIMeta{}
-	dbConfigs := []*DBTableMeta{}
+	apiMetas := []*APIMeta{}
+	dbMetas := []*DBTableMeta{}
 
 	for _, output := range rtConfig.Outputs {
 		walkErr := filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
@@ -51,19 +51,19 @@ func Build() error {
 			switch filepath.Ext(path) {
 			case ".json", ".yaml", ".yml":
 				if err := UnmarshalConfig(path, &header); err != nil {
-					return nil // Not a rt config file, just ignore.  continue walking
+					return nil // Not a rt meta file, just ignore.  continue walking
 				} else if slices.Contains(APIVersions, header.Version) {
 					if apiConfig, err := LoadAPIMeta(path); err != nil {
 						return err
 					} else {
-						apiConfigs = append(apiConfigs, apiConfig)
+						apiMetas = append(apiMetas, apiConfig)
 						return nil
 					}
 				} else if slices.Contains(DBVersions, header.Version) {
 					if dbConfig, err := LoadDBTableMeta(path); err != nil {
 						return err
 					} else {
-						dbConfigs = append(dbConfigs, dbConfig)
+						dbMetas = append(dbMetas, dbConfig)
 						return nil
 					}
 				} else {
@@ -81,11 +81,11 @@ func Build() error {
 		var builder IBuilder
 
 		context := BuildContext{
-			location:   MainLocation,
-			rtConfig:   rtConfig,
-			apiConfigs: apiConfigs,
-			dbConfigs:  dbConfigs,
-			output:     output,
+			location: MainLocation,
+			rtConfig: rtConfig,
+			apiMetas: apiMetas,
+			dbMetas:  dbMetas,
+			output:   output,
 		}
 
 		switch output.Language {

@@ -37,8 +37,8 @@ func LoadRTConfig() (*RTConfig, error) {
 	}
 
 	if configPath == "" {
-		// 在当前目录下，依次寻找 .rt.json .rt.yaml .rt.yml
-		searchFiles := []string{"./.rt.json", "./.rt.yaml", "./.rt.yml"}
+		// 在当前目录下，依次寻找 .capi.json .capi.yaml .capi.yml
+		searchFiles := []string{"./.capi.json", "./.capi.yaml", "./.capi.yml"}
 		for _, file := range searchFiles {
 			if fileInfo, err := os.Stat(file); err == nil && !fileInfo.IsDir() {
 				configPath = file
