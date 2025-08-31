@@ -113,11 +113,11 @@ func (p *GoBuilder) BuildServer() error {
 		return err
 	}
 
-	configs := []*APIConfig{}
+	configs := []*APIMeta{}
 	configs = append(configs, p.apiConfigs...)
 
 	for _, dbConfig := range p.dbConfigs {
-		if apiConfig, err := dbConfig.ToApiConfig(); err != nil {
+		if apiConfig, err := dbConfig.ToAPIMeta(); err != nil {
 			return err
 		} else {
 			configs = append(configs, apiConfig)
@@ -133,7 +133,7 @@ func (p *GoBuilder) BuildServer() error {
 	return nil
 }
 
-func (p *GoBuilder) buildServerWithConfig(apiConfig *APIConfig) error {
+func (p *GoBuilder) buildServerWithConfig(apiConfig *APIMeta) error {
 	if apiConfig.Namespace == "" {
 		return fmt.Errorf("namespace is required")
 	}

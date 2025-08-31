@@ -83,17 +83,17 @@ func (p *TypescriptBuilder) BuildServer() error {
 }
 
 func (p *TypescriptBuilder) BuildClient() error {
-	configs := []*APIConfig{}
+	configs := []*APIMeta{}
 	configs = append(configs, p.apiConfigs...)
 	for _, dbConfig := range p.dbConfigs {
-		if apiConfig, err := dbConfig.ToApiConfig(); err != nil {
+		if apiConfig, err := dbConfig.ToAPIMeta(); err != nil {
 			return err
 		} else {
 			configs = append(configs, apiConfig)
 		}
 	}
 
-	rootNode := MakeApiConfigTree(configs)
+	rootNode := MakeAPIConfigTree(configs)
 	if rootNode == nil {
 		// no api found
 		return nil
@@ -114,7 +114,7 @@ func (p *TypescriptBuilder) BuildClient() error {
 	return nil
 }
 
-func (p *TypescriptBuilder) buildClientWithConfig(node *APIConfigNode) error {
+func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 	if node.namespace == "" {
 		return fmt.Errorf("namespace is required")
 	}
@@ -130,11 +130,11 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIConfigNode) error {
 	// needImportFetchJson := false
 
 	// definitions
-	if node.config != nil {
-		for name, define := range node.config.Definitions {
+	if node.meta != nil {
+		for name, define := range node.meta.Definitions {
 			if len(define.Attributes) > 0 {
 				attributes := []string{}
-				fullDefineName := node.config.Namespace + "@" + name
+				fullDefineName := node.meta.Namespace + "@" + name
 				for _, attribute := range define.Attributes {
 					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
 					if pkg != "" {
@@ -163,13 +163,13 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIConfigNode) error {
 	}
 
 	// actions
-	if node.config != nil && len(node.config.Actions) > 0 {
+	if node.meta != nil && len(node.meta.Actions) > 0 {
 		imports = append(imports, "import { fetchJson } from \"../system/utils\";")
-		for name, action := range node.config.Actions {
+		for name, action := range node.meta.Actions {
 			if len(action.Parameters) > 0 {
 				attributes := []string{}
 				dataAttrs := []string{}
-				fullActionName := node.config.Namespace + ":" + name
+				fullActionName := node.meta.Namespace + ":" + name
 				method := strings.ToUpper(action.Method)
 				for _, attribute := range action.Parameters {
 					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
@@ -240,12 +240,12 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIConfigNode) error {
 		} else {
 			actionContent = "export class __Main__ {\n"
 		}
-		if node.config != nil {
+		if node.meta != nil {
 			actionContent += "\tprivate url: string;\n"
 		}
 		actionContent += childrenDefineContent
 		actionContent += "\tconstructor(url: string) {\n"
-		if node.config != nil {
+		if node.meta != nil {
 			actionContent += "\t\tthis.url = url;\n"
 		}
 		actionContent += childrenConstructorContent
@@ -262,7 +262,7 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIConfigNode) error {
 		}
 	}
 
-	if strings.HasPrefix(node.namespace, "DB") && node.config == nil {
+	if strings.HasPrefix(node.namespace, "DB") && node.meta == nil {
 		return nil
 	} else if node.namespace == "API" {
 		// write file

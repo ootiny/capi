@@ -17,8 +17,8 @@ type IBuilder interface {
 type BuildContext struct {
 	location   string
 	rtConfig   *RTConfig
-	apiConfigs []*APIConfig
-	dbConfigs  []*TableConfig
+	apiConfigs []*APIMeta
+	dbConfigs  []*DBTableMeta
 	output     *RTOutputConfig
 }
 
@@ -32,8 +32,8 @@ func Build() error {
 	log.Printf("rt: project dir: %s\n", projectDir)
 	log.Printf("rt: config file: %s\n", rtConfig.GetFilePath())
 
-	apiConfigs := []*APIConfig{}
-	dbConfigs := []*TableConfig{}
+	apiConfigs := []*APIMeta{}
+	dbConfigs := []*DBTableMeta{}
 
 	for _, output := range rtConfig.Outputs {
 		walkErr := filepath.Walk(projectDir, func(path string, info os.FileInfo, err error) error {
@@ -53,14 +53,14 @@ func Build() error {
 				if err := UnmarshalConfig(path, &header); err != nil {
 					return nil // Not a rt config file, just ignore.  continue walking
 				} else if slices.Contains(APIVersions, header.Version) {
-					if apiConfig, err := LoadAPIConfig(path); err != nil {
+					if apiConfig, err := LoadAPIMeta(path); err != nil {
 						return err
 					} else {
 						apiConfigs = append(apiConfigs, apiConfig)
 						return nil
 					}
 				} else if slices.Contains(DBVersions, header.Version) {
-					if dbConfig, err := LoadTableConfig(path); err != nil {
+					if dbConfig, err := LoadDBTableMeta(path); err != nil {
 						return err
 					} else {
 						dbConfigs = append(dbConfigs, dbConfig)
