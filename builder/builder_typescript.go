@@ -85,11 +85,11 @@ func (p *TypescriptBuilder) BuildServer() error {
 func (p *TypescriptBuilder) BuildClient() error {
 	metas := []*APIMeta{}
 	metas = append(metas, p.apiMetas...)
-	for _, dbConfig := range p.dbMetas {
-		if apiConfig, err := dbConfig.ToAPIMeta(); err != nil {
+	for _, dbMeta := range p.dbMetas {
+		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
 			return err
 		} else {
-			metas = append(metas, apiConfig)
+			metas = append(metas, apiMeta)
 		}
 	}
 
@@ -100,13 +100,13 @@ func (p *TypescriptBuilder) BuildClient() error {
 	}
 
 	if apiNode := rootNode.children["API"]; apiNode != nil {
-		if err := p.buildClientWithConfig(apiNode); err != nil {
+		if err := p.buildClientWithMetaNode(apiNode); err != nil {
 			return err
 		}
 	}
 
 	if dbNode := rootNode.children["DB"]; dbNode != nil {
-		if err := p.buildClientWithConfig(dbNode); err != nil {
+		if err := p.buildClientWithMetaNode(dbNode); err != nil {
 			return err
 		}
 	}
@@ -114,12 +114,12 @@ func (p *TypescriptBuilder) BuildClient() error {
 	return nil
 }
 
-func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
-	if node.namespace == "" {
+func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error {
+	if metaNode.namespace == "" {
 		return fmt.Errorf("namespace is required")
 	}
 
-	currentPackage := NamespaceToFolder(p.location, node.namespace)
+	currentPackage := NamespaceToFolder(p.location, metaNode.namespace)
 
 	imports := []string{}
 
@@ -130,11 +130,11 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 	// needImportFetchJson := false
 
 	// definitions
-	if node.meta != nil {
-		for name, define := range node.meta.Definitions {
+	if metaNode.meta != nil {
+		for name, define := range metaNode.meta.Definitions {
 			if len(define.Attributes) > 0 {
 				attributes := []string{}
-				fullDefineName := node.meta.Namespace + "@" + name
+				fullDefineName := metaNode.meta.Namespace + "@" + name
 				for _, attribute := range define.Attributes {
 					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
 					if pkg != "" {
@@ -163,13 +163,13 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 	}
 
 	// actions
-	if node.meta != nil && len(node.meta.Actions) > 0 {
+	if metaNode.meta != nil && len(metaNode.meta.Actions) > 0 {
 		imports = append(imports, "import { fetchJson } from \"../system/utils\";")
-		for name, action := range node.meta.Actions {
+		for name, action := range metaNode.meta.Actions {
 			if len(action.Parameters) > 0 {
 				attributes := []string{}
 				dataAttrs := []string{}
-				fullActionName := node.meta.Namespace + ":" + name
+				fullActionName := metaNode.meta.Namespace + ":" + name
 				method := strings.ToUpper(action.Method)
 				for _, attribute := range action.Parameters {
 					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
@@ -208,10 +208,10 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 	// children
 	childrenDefineContent := ""
 	childrenConstructorContent := ""
-	for name, child := range node.children {
+	for name, child := range metaNode.children {
 		tagetPackage := NamespaceToFolder(p.location, child.namespace)
 		if tagetPackage != currentPackage {
-			if node.namespace == "API" {
+			if metaNode.namespace == "API" {
 				imports = append(imports, fmt.Sprintf("import * as %s from \"./%s\";", tagetPackage, tagetPackage))
 			} else {
 				imports = append(imports, fmt.Sprintf("import * as %s from \"../%s\";", tagetPackage, tagetPackage))
@@ -235,17 +235,17 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 
 	actionContent := ""
 	if len(actions) > 0 || childrenDefineContent != "" {
-		if node.namespace == "API" {
+		if metaNode.namespace == "API" {
 			actionContent = "export class Client {\n"
 		} else {
 			actionContent = "export class __Main__ {\n"
 		}
-		if node.meta != nil {
+		if metaNode.meta != nil {
 			actionContent += "\tprivate url: string;\n"
 		}
 		actionContent += childrenDefineContent
 		actionContent += "\tconstructor(url: string) {\n"
-		if node.meta != nil {
+		if metaNode.meta != nil {
 			actionContent += "\t\tthis.url = url;\n"
 		}
 		actionContent += childrenConstructorContent
@@ -256,15 +256,15 @@ func (p *TypescriptBuilder) buildClientWithConfig(node *APIMetaNode) error {
 	}
 
 	// build children
-	for _, child := range node.children {
-		if err := p.buildClientWithConfig(child); err != nil {
+	for _, child := range metaNode.children {
+		if err := p.buildClientWithMetaNode(child); err != nil {
 			return err
 		}
 	}
 
-	if strings.HasPrefix(node.namespace, "DB") && node.meta == nil {
+	if strings.HasPrefix(metaNode.namespace, "DB") && metaNode.meta == nil {
 		return nil
-	} else if node.namespace == "API" {
+	} else if metaNode.namespace == "API" {
 		// write file
 		return WriteGeneratedFile(filepath.Join(p.output.Dir, "index.ts"), fmt.Sprintf(
 			"%s%s%s",
