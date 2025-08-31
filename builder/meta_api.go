@@ -49,6 +49,18 @@ func (c *APIMeta) GetFilePath() string {
 	return c.__filepath__
 }
 
+func LoadAPIMeta(filePath string) (*APIMeta, error) {
+	var meta APIMeta
+
+	if err := UnmarshalConfig(filePath, &meta); err != nil {
+		return nil, fmt.Errorf("failed to parse meta file: %w", err)
+	}
+
+	meta.__filepath__ = filePath
+
+	return &meta, nil
+}
+
 type APIMetaNode struct {
 	name      string
 	namespace string
@@ -106,16 +118,4 @@ func MakeAPIConfigTree(configlist []*APIMeta) *APIMetaNode {
 			"DB":  buildMap["DB"],
 		},
 	}
-}
-
-func LoadAPIMeta(filePath string) (*APIMeta, error) {
-	var meta APIMeta
-
-	if err := UnmarshalConfig(filePath, &meta); err != nil {
-		return nil, fmt.Errorf("failed to parse meta file: %w", err)
-	}
-
-	meta.__filepath__ = filePath
-
-	return &meta, nil
 }
