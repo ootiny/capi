@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"maps"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -53,21 +54,14 @@ func toTypeScriptType(location string, currentPackage string, name string) (stri
 
 type TypescriptBuilder struct{}
 
-func (p *TypescriptBuilder) Prepare(ctx *BuildContext) error {
-	switch ctx.output.Kind {
-	case "server":
-		return fmt.Errorf("not implemented")
-	case "client":
-		systemDir := filepath.Join(ctx.output.Dir, "system")
-		if engineContent, err := assets.ReadFile("assets/typescript/utils.ts"); err != nil {
-			return fmt.Errorf("failed to read assets file: %v", err)
-		} else if err := WriteGeneratedFile(filepath.Join(systemDir, "utils.ts"), string(engineContent)); err != nil {
-			return fmt.Errorf("failed to write assets file: %v", err)
-		} else {
-			return nil
-		}
-	default:
-		return fmt.Errorf("unknown output kind: %s", ctx.output.Kind)
+func (p *TypescriptBuilder) buildClientBaseFiles(ctx *BuildContext) (map[string]string, error) {
+	systemDir := filepath.Join(ctx.output.Dir, "system")
+	if engineContent, err := assets.ReadFile("assets/typescript/utils.ts"); err != nil {
+		return nil, fmt.Errorf("failed to read assets file: %v", err)
+	} else {
+		return map[string]string{
+			filepath.Join(systemDir, "utils.ts"): string(engineContent),
+		}, nil
 	}
 }
 
@@ -76,7 +70,10 @@ func (p *TypescriptBuilder) BuildServer(ctx *BuildContext) (map[string]string, e
 }
 
 func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, error) {
-	ret := map[string]string{}
+	ret, err := p.buildClientBaseFiles(ctx)
+	if err != nil {
+		return nil, err
+	}
 
 	metas := []*APIMeta{}
 	metas = append(metas, ctx.apiMetas...)
@@ -98,9 +95,7 @@ func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, e
 		if fileMap, err := p.buildClientWithMetaNode(ctx, apiNode); err != nil {
 			return nil, err
 		} else {
-			for k, v := range fileMap {
-				ret[k] = v
-			}
+			maps.Copy(ret, fileMap)
 		}
 	}
 
@@ -108,9 +103,7 @@ func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, e
 		if fileMap, err := p.buildClientWithMetaNode(ctx, dbNode); err != nil {
 			return nil, err
 		} else {
-			for k, v := range fileMap {
-				ret[k] = v
-			}
+			maps.Copy(ret, fileMap)
 		}
 	}
 
@@ -265,9 +258,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(ctx *BuildContext, metaNode 
 		if fileMap, err := p.buildClientWithMetaNode(ctx, child); err != nil {
 			return nil, err
 		} else {
-			for k, v := range fileMap {
-				ret[k] = v
-			}
+			maps.Copy(ret, fileMap)
 		}
 	}
 

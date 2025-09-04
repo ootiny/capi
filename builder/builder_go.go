@@ -3,6 +3,7 @@ package builder
 import (
 	"encoding/json"
 	"fmt"
+	"maps"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -77,18 +78,14 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 	if fileMap, err := p.buildServerBaseFiles(ctx); err != nil {
 		return nil, err
 	} else {
-		for k, v := range fileMap {
-			ret[k] = v
-		}
+		maps.Copy(ret, fileMap)
 	}
 
 	// build db
 	if fileMap, err := p.buildDB(ctx); err != nil {
 		return nil, err
 	} else {
-		for k, v := range fileMap {
-			ret[k] = v
-		}
+		maps.Copy(ret, fileMap)
 	}
 
 	metas := []*APIMeta{}
@@ -106,9 +103,7 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 		if fileMap, err := p.buildServerWithMeta(ctx, apiMeta); err != nil {
 			return nil, err
 		} else {
-			for k, v := range fileMap {
-				ret[k] = v
-			}
+			maps.Copy(ret, fileMap)
 		}
 	}
 
