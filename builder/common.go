@@ -311,3 +311,20 @@ func ParseProjectDir(filePath string, projectDir string) (string, error) {
 
 	return result, nil
 }
+
+func CopyAssetsFiles(outDir string, replaceMap map[string]string, copyFiles []string) (map[string]string, error) {
+	ret := map[string]string{}
+
+	for _, copyFile := range copyFiles {
+		if fileContent, err := assets.ReadFile(copyFile); err != nil {
+			return nil, fmt.Errorf("failed to read assets file: %v", err)
+		} else {
+			for k, v := range replaceMap {
+				fileContent = []byte(strings.ReplaceAll(string(fileContent), k, v))
+			}
+
+			ret[filepath.Join(outDir, filepath.Base(copyFile))] = string(fileContent)
+		}
+	}
+	return ret, nil
+}

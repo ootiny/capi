@@ -54,23 +54,18 @@ func toTypeScriptType(location string, currentPackage string, name string) (stri
 
 type TypescriptBuilder struct{}
 
-func (p *TypescriptBuilder) buildClientBaseFiles(ctx *BuildContext) (map[string]string, error) {
-	systemDir := filepath.Join(ctx.output.Dir, "system")
-	if engineContent, err := assets.ReadFile("assets/typescript/utils.ts"); err != nil {
-		return nil, fmt.Errorf("failed to read assets file: %v", err)
-	} else {
-		return map[string]string{
-			filepath.Join(systemDir, "utils.ts"): string(engineContent),
-		}, nil
-	}
-}
-
 func (p *TypescriptBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 	return nil, fmt.Errorf("not implemented")
 }
 
 func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, error) {
-	ret, err := p.buildClientBaseFiles(ctx)
+	ret, err := CopyAssetsFiles(
+		ctx.output.Dir,
+		nil,
+		[]string{
+			"assets/typescript/client_utils.ts",
+		},
+	)
 	if err != nil {
 		return nil, err
 	}
@@ -162,7 +157,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(ctx *BuildContext, metaNode 
 
 	// actions
 	if metaNode.meta != nil && len(metaNode.meta.Actions) > 0 {
-		imports = append(imports, "import { fetchJson } from \"../system/utils\";")
+		imports = append(imports, "import { fetchJson } from \"../client_utils\";")
 		for name, action := range metaNode.meta.Actions {
 			if len(action.Parameters) > 0 {
 				attributes := []string{}

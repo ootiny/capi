@@ -72,13 +72,20 @@ func (p *GoBuilder) BuildClient(ctx *BuildContext) (map[string]string, error) {
 }
 
 func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
-	ret := map[string]string{}
-
 	// build base files
-	if fileMap, err := p.buildServerBaseFiles(ctx); err != nil {
+	ret, err := CopyAssetsFiles(
+		ctx.output.Dir,
+		map[string]string{
+			"package _rt_package_name_": fmt.Sprintf("package %s", ctx.output.GoPackage),
+		},
+		[]string{
+			fmt.Sprintf("assets/go/%s", goEngineMap[ctx.output.HttpEngine]),
+			"assets/go/server_common.go",
+			"assets/go/pub_error.go",
+		},
+	)
+	if err != nil {
 		return nil, err
-	} else {
-		maps.Copy(ret, fileMap)
 	}
 
 	// build db
@@ -107,32 +114,6 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 		}
 	}
 
-	return ret, nil
-}
-
-func (p *GoBuilder) buildServerBaseFiles(ctx *BuildContext) (map[string]string, error) {
-	ret := map[string]string{}
-	copyFiles := []string{
-		fmt.Sprintf("assets/go/%s", goEngineMap[ctx.output.HttpEngine]),
-		"assets/go/server_common.go",
-		"assets/go/pub_error.go",
-	}
-
-	packageReplace := [][2]string{
-		{"package _rt_package_name_", fmt.Sprintf("package %s", ctx.output.GoPackage)},
-	}
-
-	for _, copyFile := range copyFiles {
-		if fileContent, err := assets.ReadFile(copyFile); err != nil {
-			return nil, fmt.Errorf("failed to read assets file: %v", err)
-		} else {
-			for _, replace := range packageReplace {
-				fileContent = []byte(strings.ReplaceAll(string(fileContent), replace[0], replace[1]))
-			}
-
-			ret[filepath.Join(ctx.output.Dir, filepath.Base(copyFile))] = string(fileContent)
-		}
-	}
 	return ret, nil
 }
 
