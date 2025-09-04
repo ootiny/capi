@@ -2,7 +2,6 @@ package builder
 
 import (
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -52,21 +51,15 @@ func toTypeScriptType(location string, currentPackage string, name string) (stri
 	}
 }
 
-type TypescriptBuilder struct {
-	BuildContext
-}
+type TypescriptBuilder struct{}
 
-func (p *TypescriptBuilder) Prepare() error {
-	switch p.output.Kind {
+func (p *TypescriptBuilder) Prepare(ctx *BuildContext) error {
+	switch ctx.output.Kind {
 	case "server":
 		return fmt.Errorf("not implemented")
 	case "client":
-		systemDir := filepath.Join(p.output.Dir, "system")
-		if err := os.RemoveAll(p.output.Dir); err != nil {
-			return fmt.Errorf("failed to remove system dir: %v", err)
-		} else if err := os.MkdirAll(systemDir, 0755); err != nil {
-			return fmt.Errorf("failed to create system dir: %v", err)
-		} else if engineContent, err := assets.ReadFile("assets/typescript/utils.ts"); err != nil {
+		systemDir := filepath.Join(ctx.output.Dir, "system")
+		if engineContent, err := assets.ReadFile("assets/typescript/utils.ts"); err != nil {
 			return fmt.Errorf("failed to read assets file: %v", err)
 		} else if err := WriteGeneratedFile(filepath.Join(systemDir, "utils.ts"), string(engineContent)); err != nil {
 			return fmt.Errorf("failed to write assets file: %v", err)
@@ -74,20 +67,22 @@ func (p *TypescriptBuilder) Prepare() error {
 			return nil
 		}
 	default:
-		return fmt.Errorf("unknown output kind: %s", p.output.Kind)
+		return fmt.Errorf("unknown output kind: %s", ctx.output.Kind)
 	}
 }
 
-func (p *TypescriptBuilder) BuildServer() error {
-	return fmt.Errorf("not implemented")
+func (p *TypescriptBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
-func (p *TypescriptBuilder) BuildClient() error {
+func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, error) {
+	ret := map[string]string{}
+
 	metas := []*APIMeta{}
-	metas = append(metas, p.apiMetas...)
-	for _, dbMeta := range p.dbMetas {
+	metas = append(metas, ctx.apiMetas...)
+	for _, dbMeta := range ctx.dbMetas {
 		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
-			return err
+			return nil, err
 		} else {
 			metas = append(metas, apiMeta)
 		}
@@ -96,30 +91,40 @@ func (p *TypescriptBuilder) BuildClient() error {
 	rootNode := MakeAPIConfigTree(metas)
 	if rootNode == nil {
 		// no api found
-		return nil
+		return ret, nil
 	}
 
 	if apiNode := rootNode.children["API"]; apiNode != nil {
-		if err := p.buildClientWithMetaNode(apiNode); err != nil {
-			return err
+		if fileMap, err := p.buildClientWithMetaNode(ctx, apiNode); err != nil {
+			return nil, err
+		} else {
+			for k, v := range fileMap {
+				ret[k] = v
+			}
 		}
 	}
 
 	if dbNode := rootNode.children["DB"]; dbNode != nil {
-		if err := p.buildClientWithMetaNode(dbNode); err != nil {
-			return err
+		if fileMap, err := p.buildClientWithMetaNode(ctx, dbNode); err != nil {
+			return nil, err
+		} else {
+			for k, v := range fileMap {
+				ret[k] = v
+			}
 		}
 	}
 
-	return nil
+	return ret, nil
 }
 
-func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error {
+func (p *TypescriptBuilder) buildClientWithMetaNode(ctx *BuildContext, metaNode *APIMetaNode) (map[string]string, error) {
+	ret := map[string]string{}
+
 	if metaNode.namespace == "" {
-		return fmt.Errorf("namespace is required")
+		return nil, fmt.Errorf("namespace is required")
 	}
 
-	currentPackage := NamespaceToFolder(p.location, metaNode.namespace)
+	currentPackage := NamespaceToFolder(ctx.location, metaNode.namespace)
 
 	imports := []string{}
 
@@ -136,7 +141,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error
 				attributes := []string{}
 				fullDefineName := metaNode.meta.Namespace + "@" + name
 				for _, attribute := range define.Attributes {
-					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
+					attrType, pkg := toTypeScriptType(ctx.location, currentPackage, attribute.Type)
 					if pkg != "" {
 						imports = append(imports, pkg)
 					}
@@ -172,7 +177,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error
 				fullActionName := metaNode.meta.Namespace + ":" + name
 				method := strings.ToUpper(action.Method)
 				for _, attribute := range action.Parameters {
-					attrType, pkg := toTypeScriptType(p.location, currentPackage, attribute.Type)
+					attrType, pkg := toTypeScriptType(ctx.location, currentPackage, attribute.Type)
 					if pkg != "" {
 						imports = append(imports, pkg)
 					}
@@ -187,7 +192,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error
 					}
 				}
 
-				returnType, pkg := toTypeScriptType(p.location, currentPackage, action.Return.Type)
+				returnType, pkg := toTypeScriptType(ctx.location, currentPackage, action.Return.Type)
 				if pkg != "" {
 					imports = append(imports, pkg)
 				}
@@ -209,7 +214,7 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error
 	childrenDefineContent := ""
 	childrenConstructorContent := ""
 	for name, child := range metaNode.children {
-		tagetPackage := NamespaceToFolder(p.location, child.namespace)
+		tagetPackage := NamespaceToFolder(ctx.location, child.namespace)
 		if tagetPackage != currentPackage {
 			if metaNode.namespace == "API" {
 				imports = append(imports, fmt.Sprintf("import * as %s from \"./%s\";", tagetPackage, tagetPackage))
@@ -257,28 +262,33 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(metaNode *APIMetaNode) error
 
 	// build children
 	for _, child := range metaNode.children {
-		if err := p.buildClientWithMetaNode(child); err != nil {
-			return err
+		if fileMap, err := p.buildClientWithMetaNode(ctx, child); err != nil {
+			return nil, err
+		} else {
+			for k, v := range fileMap {
+				ret[k] = v
+			}
 		}
 	}
 
 	if strings.HasPrefix(metaNode.namespace, "DB") && metaNode.meta == nil {
-		return nil
+		// do nothing
 	} else if metaNode.namespace == "API" {
-		// write file
-		return WriteGeneratedFile(filepath.Join(p.output.Dir, "index.ts"), fmt.Sprintf(
+		ret[filepath.Join(ctx.output.Dir, "index.ts")] = fmt.Sprintf(
 			"%s%s%s",
 			importsContent,
 			defineContent,
 			actionContent,
-		))
+		)
 	} else {
 		// write file
-		return WriteGeneratedFile(filepath.Join(p.output.Dir, currentPackage, "index.ts"), fmt.Sprintf(
+		ret[filepath.Join(ctx.output.Dir, currentPackage, "index.ts")] = fmt.Sprintf(
 			"%s%s%s",
 			importsContent,
 			defineContent,
 			actionContent,
-		))
+		)
 	}
+
+	return ret, nil
 }

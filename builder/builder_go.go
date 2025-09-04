@@ -1,8 +1,8 @@
 package builder
 
 import (
+	"encoding/json"
 	"fmt"
-	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -64,94 +64,91 @@ func toGolangType(location string, goModule string, currentPackage string, name 
 	}
 }
 
-type GoBuilder struct {
-	BuildContext
+type GoBuilder struct{}
+
+func (p *GoBuilder) BuildClient(ctx *BuildContext) (map[string]string, error) {
+	return nil, fmt.Errorf("not implemented")
 }
 
-func (p *GoBuilder) Prepare() error {
-	switch p.output.Kind {
-	case "server":
-		if err := os.RemoveAll(p.output.Dir); err != nil {
-			return fmt.Errorf("failed to remove system dir: %v", err)
-		} else if err := os.MkdirAll(p.output.Dir, 0755); err != nil {
-			return fmt.Errorf("failed to create system dir: %v", err)
-		} else {
-			copyFiles := []string{
-				fmt.Sprintf("assets/go/%s", goEngineMap[p.output.HttpEngine]),
-				"assets/go/server_common.go",
-				"assets/go/pub_error.go",
-			}
+func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
+	ret := map[string]string{}
 
-			packageReplace := [][2]string{
-				{"package _rt_package_name_", fmt.Sprintf("package %s", p.output.GoPackage)},
-			}
-
-			for _, copyFile := range copyFiles {
-				if fileContent, err := assets.ReadFile(copyFile); err != nil {
-					return fmt.Errorf("failed to read assets file: %v", err)
-				} else {
-					for _, replace := range packageReplace {
-						fileContent = []byte(strings.ReplaceAll(string(fileContent), replace[0], replace[1]))
-					}
-
-					if err := WriteGeneratedFile(
-						filepath.Join(p.output.Dir, filepath.Base(copyFile)),
-						string(fileContent),
-					); err != nil {
-						return fmt.Errorf("failed to write assets file: %v", err)
-					}
-				}
-			}
+	// build base files
+	if fileMap, err := p.buildServerBaseFiles(ctx); err != nil {
+		return nil, err
+	} else {
+		for k, v := range fileMap {
+			ret[k] = v
 		}
-
-		return nil
-	case "client":
-		return fmt.Errorf("not implemented")
-	default:
-		return fmt.Errorf("unknown output kind: %s", p.output.Kind)
 	}
-}
 
-func (p *GoBuilder) BuildClient() error {
-	return fmt.Errorf("not implemented")
-}
-
-func (p *GoBuilder) BuildServer() error {
-	if err := p.buildDB(); err != nil {
-		return err
+	// build db
+	if fileMap, err := p.buildDB(ctx); err != nil {
+		return nil, err
+	} else {
+		for k, v := range fileMap {
+			ret[k] = v
+		}
 	}
 
 	metas := []*APIMeta{}
-	metas = append(metas, p.apiMetas...)
+	metas = append(metas, ctx.apiMetas...)
 
-	for _, dbMeta := range p.dbMetas {
+	for _, dbMeta := range ctx.dbMetas {
 		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
-			return err
+			return nil, err
 		} else {
 			metas = append(metas, apiMeta)
 		}
 	}
 
 	for _, apiMeta := range metas {
-		if err := p.buildServerWithMeta(apiMeta); err != nil {
-			return err
+		if fileMap, err := p.buildServerWithMeta(ctx, apiMeta); err != nil {
+			return nil, err
+		} else {
+			for k, v := range fileMap {
+				ret[k] = v
+			}
 		}
 	}
 
-	return nil
+	return ret, nil
 }
 
-func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
+func (p *GoBuilder) buildServerBaseFiles(ctx *BuildContext) (map[string]string, error) {
+	ret := map[string]string{}
+	copyFiles := []string{
+		fmt.Sprintf("assets/go/%s", goEngineMap[ctx.output.HttpEngine]),
+		"assets/go/server_common.go",
+		"assets/go/pub_error.go",
+	}
+
+	packageReplace := [][2]string{
+		{"package _rt_package_name_", fmt.Sprintf("package %s", ctx.output.GoPackage)},
+	}
+
+	for _, copyFile := range copyFiles {
+		if fileContent, err := assets.ReadFile(copyFile); err != nil {
+			return nil, fmt.Errorf("failed to read assets file: %v", err)
+		} else {
+			for _, replace := range packageReplace {
+				fileContent = []byte(strings.ReplaceAll(string(fileContent), replace[0], replace[1]))
+			}
+
+			ret[filepath.Join(ctx.output.Dir, filepath.Base(copyFile))] = string(fileContent)
+		}
+	}
+	return ret, nil
+}
+
+func (p *GoBuilder) buildServerWithMeta(ctx *BuildContext, apiMeta *APIMeta) (map[string]string, error) {
 	if apiMeta.Namespace == "" {
-		return fmt.Errorf("namespace is required")
+		return nil, fmt.Errorf("namespace is required")
 	}
 
-	currentPackage := NamespaceToFolder(p.location, apiMeta.Namespace)
+	currentPackage := NamespaceToFolder(ctx.location, apiMeta.Namespace)
 
-	outDir := filepath.Join(p.output.Dir, currentPackage)
-	if err := os.MkdirAll(outDir, 0755); err != nil {
-		return fmt.Errorf("failed to create output directory: %w", err)
-	}
+	outDir := filepath.Join(ctx.output.Dir, currentPackage)
 
 	header := fmt.Sprintf("package %s\n", currentPackage)
 
@@ -171,7 +168,7 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 			attributes := []string{}
 			fullDefineName := apiMeta.Namespace + "@" + name
 			for _, attribute := range define.Attributes {
-				attrType, pkg := toGolangType(p.location, p.output.GoModule, currentPackage, attribute.Type)
+				attrType, pkg := toGolangType(ctx.location, ctx.output.GoModule, currentPackage, attribute.Type)
 				if pkg != "" {
 					imports = append(imports, pkg)
 				}
@@ -206,17 +203,17 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 					"func Unmarshal%s(data []byte, v *%s) *%s.Error {\n\t return %s.JsonUnmarshal(data, v)\n}",
 					name,
 					name,
-					p.output.GoPackage,
-					p.output.GoPackage,
+					ctx.output.GoPackage,
+					ctx.output.GoPackage,
 				))
 				defines = append(defines, fmt.Sprintf(
 					"func %sBytesTo%s(data []byte) (*%s, *%s.Error) {\n\tvar v %s\n\tif err := %s.JsonUnmarshal(data, &v); err != nil {\n\t\treturn nil, err\n\t}\n\treturn &v, nil\n}\n",
 					name,
 					name,
 					name,
-					p.output.GoPackage,
+					ctx.output.GoPackage,
 					name,
-					p.output.GoPackage,
+					ctx.output.GoPackage,
 				))
 
 				needImportBasePackage = true
@@ -230,7 +227,7 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 
 		for name, action := range apiMeta.Actions {
 			parameters := []string{
-				fmt.Sprintf("ctx *%s.Context", p.output.GoPackage),
+				fmt.Sprintf("ctx *%s.Context", ctx.output.GoPackage),
 			}
 			structParameters := []string{}
 			callParameters := []string{
@@ -238,7 +235,7 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 			}
 			fullActionName := apiMeta.Namespace + ":" + name
 			for _, parameter := range action.Parameters {
-				typeName, typePkg := toGolangType(p.location, p.output.GoModule, currentPackage, parameter.Type)
+				typeName, typePkg := toGolangType(ctx.location, ctx.output.GoModule, currentPackage, parameter.Type)
 				if typePkg != "" {
 					imports = append(imports, typePkg)
 				}
@@ -258,14 +255,14 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 				callParameters = append(callParameters, "v."+goParameterName)
 			}
 
-			returnType, typePkg := toGolangType(p.location, p.output.GoModule, currentPackage, action.Return.Type)
+			returnType, typePkg := toGolangType(ctx.location, ctx.output.GoModule, currentPackage, action.Return.Type)
 			if typePkg != "" {
 				imports = append(imports, typePkg)
 			}
 
-			returnStr := fmt.Sprintf("*%s.Error", p.output.GoPackage)
+			returnStr := fmt.Sprintf("*%s.Error", ctx.output.GoPackage)
 			if returnType != "" {
-				returnStr = fmt.Sprintf("(%s, *%s.Error)", returnType, p.output.GoPackage)
+				returnStr = fmt.Sprintf("(%s, *%s.Error)", returnType, ctx.output.GoPackage)
 			}
 
 			actions = append(actions, fmt.Sprintf(
@@ -293,40 +290,40 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 
 			if len(structParameters) > 0 {
 				funcBody += fmt.Sprintf("\n\t\tvar v struct {\n\t%s\n\t\t}", strings.Join(structParameters, "\n"))
-				funcBody += fmt.Sprintf("\n\t\tif err := %s.JsonUnmarshal(data, &v); err != nil {\n\t\t\treturn nil\n\t\t}\n", p.output.GoPackage)
+				funcBody += fmt.Sprintf("\n\t\tif err := %s.JsonUnmarshal(data, &v); err != nil {\n\t\t\treturn nil\n\t\t}\n", ctx.output.GoPackage)
 			}
 
 			funcBody += fmt.Sprintf(
 				"\n\t\tif fn%s == nil {\n\t\t\treturn &%s.Return{Code: %s.ErrActionNotImplemented, Message: \"%s is not implemented\"}\n\t\t}",
-				name, p.output.GoPackage, p.output.GoPackage, fullActionName,
+				name, ctx.output.GoPackage, ctx.output.GoPackage, fullActionName,
 			)
 			if returnType == "" {
 				funcBody += fmt.Sprintf(
 					" else if err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.Code(), Message: err.Error()}\n\t\t}",
-					name, strings.Join(callParameters, ", "), p.output.GoPackage,
+					name, strings.Join(callParameters, ", "), ctx.output.GoPackage,
 				)
-				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{}\n\t\t}", p.output.GoPackage)
+				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{}\n\t\t}", ctx.output.GoPackage)
 			} else {
 				funcBody += fmt.Sprintf(
 					" else if result, err := fn%s(%s); err != nil {\n\t\t\treturn &%s.Return{Code: err.Code(), Message: err.Error()}\n\t\t}",
-					name, strings.Join(callParameters, ", "), p.output.GoPackage,
+					name, strings.Join(callParameters, ", "), ctx.output.GoPackage,
 				)
-				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{Data: result}\n\t\t}", p.output.GoPackage)
+				funcBody += fmt.Sprintf(" else {\n\t\t\treturn &%s.Return{Data: result}\n\t\t}", ctx.output.GoPackage)
 			}
 
 			registerFuncs = append(registerFuncs, fmt.Sprintf(
 				"\t%s.RegisterHandler(\"%s\", func(ctx *%s.Context, data []byte) *%s.Return {%s\n\t})",
-				p.output.GoPackage,
+				ctx.output.GoPackage,
 				fullActionName,
-				p.output.GoPackage,
-				p.output.GoPackage,
+				ctx.output.GoPackage,
+				ctx.output.GoPackage,
 				funcBody,
 			))
 		}
 	}
 
 	if needImportBasePackage {
-		imports = append(imports, fmt.Sprintf("\t\"%s\"", p.output.GoModule))
+		imports = append(imports, fmt.Sprintf("\t\"%s\"", ctx.output.GoModule))
 	}
 
 	importsContent := ""
@@ -350,31 +347,39 @@ func (p *GoBuilder) buildServerWithMeta(apiMeta *APIMeta) error {
 		registerContent = fmt.Sprintf("func init() {\n%s\n}", strings.Join(registerFuncs, "\n"))
 	}
 
-	return WriteGeneratedFile(filepath.Join(outDir, "gen.go"), fmt.Sprintf(
-		"%s%s%s%s%s",
-		header,
-		importsContent,
-		defineContent,
-		actionContent,
-		registerContent,
-	))
+	return map[string]string{
+		filepath.Join(outDir, "gen.go"): fmt.Sprintf(
+			"%s%s%s%s%s",
+			header,
+			importsContent,
+			defineContent,
+			actionContent,
+			registerContent,
+		),
+	}, nil
 }
 
-func (p *GoBuilder) buildDB() error {
-	assetDir := filepath.Join(p.output.Dir, "db")
+func (p *GoBuilder) buildDB(ctx *BuildContext) (map[string]string, error) {
+	ret := map[string]string{}
 
-	if err := WriteJSONFile(filepath.Join(assetDir, "config.json"), p.rtConfig.DB); err != nil {
-		return fmt.Errorf("failed to write assets file: %v", err)
+	assetDir := filepath.Join(ctx.output.Dir, "db")
+
+	if configContent, err := json.MarshalIndent(ctx.rtConfig.DB, "", "  "); err != nil {
+		return nil, fmt.Errorf("failed to marshal db config: %v", err)
+	} else {
+		ret[filepath.Join(assetDir, "config.json")] = string(configContent)
 	}
 
 	tableDir := filepath.Join(assetDir, "tables")
-	for _, dbMeta := range p.dbMetas {
+	for _, dbMeta := range ctx.dbMetas {
 		if dbTable, err := dbMeta.ToDBTable(); err != nil {
-			return err
-		} else if err := WriteJSONFile(filepath.Join(tableDir, fmt.Sprintf("%s.json", dbMeta.Table)), dbTable); err != nil {
-			return fmt.Errorf("failed to write assets file: %v", err)
+			return nil, err
+		} else if tableContent, err := json.MarshalIndent(dbTable, "", "  "); err != nil {
+			return nil, fmt.Errorf("failed to marshal db table: %v", err)
+		} else {
+			ret[filepath.Join(tableDir, fmt.Sprintf("%s.json", dbMeta.Table))] = string(tableContent)
 		}
 	}
 
-	return nil
+	return ret, nil
 }

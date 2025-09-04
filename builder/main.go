@@ -9,9 +9,8 @@ import (
 )
 
 type IBuilder interface {
-	Prepare() error
-	BuildServer() error
-	BuildClient() error
+	BuildServer(ctx *BuildContext) (map[string]string, error)
+	BuildClient(ctx *BuildContext) (map[string]string, error)
 }
 
 type BuildContext struct {
@@ -79,8 +78,9 @@ func Build() error {
 		}
 
 		var builder IBuilder
+		var fileMap map[string]string
 
-		context := BuildContext{
+		context := &BuildContext{
 			location: MainLocation,
 			rtConfig: rtConfig,
 			apiMetas: apiMetas,
@@ -90,32 +90,34 @@ func Build() error {
 
 		switch output.Language {
 		case "go":
-			builder = &GoBuilder{
-				BuildContext: context,
-			}
+			builder = &GoBuilder{}
 		case "typescript":
-			builder = &TypescriptBuilder{
-				BuildContext: context,
-			}
+			builder = &TypescriptBuilder{}
 		default:
 			return fmt.Errorf("unsupported language: %s", context.output.Language)
 		}
 
-		if err := builder.Prepare(); err != nil {
-			return err
-		}
-
 		switch context.output.Kind {
 		case "server":
-			if err := builder.BuildServer(); err != nil {
+			if fm, err := builder.BuildServer(context); err != nil {
 				return err
+			} else {
+				fileMap = fm
 			}
 		case "client":
-			if err := builder.BuildClient(); err != nil {
+			if fm, err := builder.BuildClient(context); err != nil {
 				return err
+			} else {
+				fileMap = fm
 			}
 		default:
 			return fmt.Errorf("unsupported kind: %s", context.output.Kind)
+		}
+
+		for k, v := range fileMap {
+			if err := WriteGeneratedFile(k, v); err != nil {
+				return fmt.Errorf("failed to write generated file: %v", err)
+			}
 		}
 	}
 
