@@ -80,8 +80,10 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 		},
 		[]string{
 			fmt.Sprintf("assets/go/%s", goEngineMap[ctx.output.HttpEngine]),
-			"assets/go/server_common.go",
 			"assets/go/pub_error.go",
+			"assets/go/server_common.go",
+			"assets/go/server_config.go",
+			"assets/go/server_sql_common.go",
 		},
 	)
 	if err != nil {
