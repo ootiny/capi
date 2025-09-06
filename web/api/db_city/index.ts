@@ -3,7 +3,17 @@ import * as db_geo from "../db_geo"
 // definition: DB.City@Full
 export interface Full {
   id: string;
+  name_16: string;
+  name_32: string;
+  name_64: string;
+  name_256: string;
   name: string;
+  age: number;
+  area: number;
+  str_list: string[];
+  str_map: { [key: string]: string };
+  gen_list: db_geo.Full[];
+  gen_map: { [key: string]: db_geo.Full };
   geo: db_geo.Full;
   active: boolean;
 }

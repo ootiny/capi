@@ -15,6 +15,52 @@
       "required": false,
       "linkTable": ""
     },
+    "age": {
+      "type": "Int64",
+      "queryMap": {
+        "=": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "area": {
+      "type": "Float64",
+      "queryMap": {
+        "=": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "gen_list": {
+      "type": "LKList",
+      "queryMap": {
+        "=": true,
+        "in": true
+      },
+      "unique": false,
+      "index": false,
+      "order": false,
+      "required": true,
+      "linkTable": "geo"
+    },
+    "gen_map": {
+      "type": "LKMap",
+      "queryMap": {
+        "=": true,
+        "in": true
+      },
+      "unique": false,
+      "index": false,
+      "order": false,
+      "required": true,
+      "linkTable": "geo"
+    },
     "geo": {
       "type": "LK",
       "queryMap": {
@@ -40,6 +86,32 @@
       "linkTable": ""
     },
     "name": {
+      "type": "String",
+      "queryMap": {
+        "=": true,
+        "in": true,
+        "like": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "name_16": {
+      "type": "String16",
+      "queryMap": {
+        "=": true,
+        "in": true,
+        "like": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "name_256": {
       "type": "String256",
       "queryMap": {
         "=": true,
@@ -49,6 +121,56 @@
       "unique": false,
       "index": false,
       "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "name_32": {
+      "type": "String32",
+      "queryMap": {
+        "=": true,
+        "in": true,
+        "like": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "name_64": {
+      "type": "String64",
+      "queryMap": {
+        "=": true,
+        "in": true,
+        "like": true
+      },
+      "unique": false,
+      "index": false,
+      "order": true,
+      "required": true,
+      "linkTable": ""
+    },
+    "str_list": {
+      "type": "List\u003cString\u003e",
+      "queryMap": {
+        "=": true,
+        "in": true
+      },
+      "unique": false,
+      "index": false,
+      "order": false,
+      "required": true,
+      "linkTable": ""
+    },
+    "str_map": {
+      "type": "Map\u003cString\u003e",
+      "queryMap": {
+        "=": true,
+        "in": true
+      },
+      "unique": false,
+      "index": false,
+      "order": false,
       "required": true,
       "linkTable": ""
     }
@@ -62,9 +184,59 @@
           "linkView": ""
         },
         {
+          "name": "name_16",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "name_32",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "name_64",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "name_256",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
           "name": "name",
           "linkTable": "",
           "linkView": ""
+        },
+        {
+          "name": "age",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "area",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "str_list",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "str_map",
+          "linkTable": "",
+          "linkView": ""
+        },
+        {
+          "name": "gen_list",
+          "linkTable": "geo",
+          "linkView": "Full"
+        },
+        {
+          "name": "gen_map",
+          "linkTable": "geo",
+          "linkView": "Full"
         },
         {
           "name": "geo",
@@ -77,9 +249,9 @@
           "linkView": ""
         }
       ],
-      "columnsSelect": "id,name,geo,active",
+      "columnsSelect": "id,name_16,name_32,name_64,name_256,name,age,area,str_list,str_map,gen_list,gen_map,geo,active",
       "cacheSecond": 2592000,
-      "hash": "BamW896AN"
+      "hash": "BeCrPiwGf"
     },
     "Simple": {
       "columns": [

@@ -5,6 +5,36 @@ import (
 	"github.com/ootiny/capi/server/runtime"
 )
 
+// definition: DB.City@Full
+type Full struct {
+	Id string `json:"id" required:"true"`
+	Name_16 string `json:"name_16" required:"true"`
+	Name_32 string `json:"name_32" required:"true"`
+	Name_64 string `json:"name_64" required:"true"`
+	Name_256 string `json:"name_256" required:"true"`
+	Name string `json:"name" required:"true"`
+	Age int64 `json:"age" required:"true"`
+	Area float64 `json:"area" required:"true"`
+	Str_list []string `json:"str_list" required:"true"`
+	Str_map map[string]string `json:"str_map" required:"true"`
+	Gen_list []db_geo.Full `json:"gen_list" required:"true"`
+	Gen_map map[string]db_geo.Full `json:"gen_map" required:"true"`
+	Geo db_geo.Full `json:"geo" required:"false"`
+	Active bool `json:"active" required:"false"`
+}
+
+type FullBytes = []byte
+func UnmarshalFull(data []byte, v *Full) *runtime.Error {
+	 return runtime.JsonUnmarshal(data, v)
+}
+func FullBytesToFull(data []byte) (*Full, *runtime.Error) {
+	var v Full
+	if err := runtime.JsonUnmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 // definition: DB.City@Simple
 type Simple struct {
 	Id string `json:"id" required:"true"`
@@ -17,26 +47,6 @@ func UnmarshalSimple(data []byte, v *Simple) *runtime.Error {
 }
 func SimpleBytesToSimple(data []byte) (*Simple, *runtime.Error) {
 	var v Simple
-	if err := runtime.JsonUnmarshal(data, &v); err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
-// definition: DB.City@Full
-type Full struct {
-	Id string `json:"id" required:"true"`
-	Name string `json:"name" required:"true"`
-	Geo db_geo.Full `json:"geo" required:"false"`
-	Active bool `json:"active" required:"false"`
-}
-
-type FullBytes = []byte
-func UnmarshalFull(data []byte, v *Full) *runtime.Error {
-	 return runtime.JsonUnmarshal(data, v)
-}
-func FullBytesToFull(data []byte) (*Full, *runtime.Error) {
-	var v Full
 	if err := runtime.JsonUnmarshal(data, &v); err != nil {
 		return nil, err
 	}

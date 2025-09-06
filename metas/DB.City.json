@@ -4,11 +4,77 @@
   "description": "City db model",
   "columns": {
     "id": { "type": "PK", "query": ["=", "in"], "required": true },
-    "name": {
+    "name_16": {
+      "type": "String16",
+      "query": ["=", "in", "like"],
+      "order": true,
+      "description": "City name (16 bytes)",
+      "required": true
+    },
+    "name_32": {
+      "type": "String32",
+      "query": ["=", "in", "like"],
+      "order": true,
+      "description": "City name (32 bytes)",
+      "required": true
+    },
+    "name_64": {
+      "type": "String64",
+      "query": ["=", "in", "like"],
+      "order": true,
+      "description": "City name (64 bytes)",
+      "required": true
+    },
+    "name_256": {
       "type": "String256",
       "query": ["=", "in", "like"],
       "order": true,
-      "description": "City name",
+      "description": "City name (256 bytes)",
+      "required": true
+    },
+    "name": {
+      "type": "String",
+      "query": ["=", "in", "like"],
+      "order": true,
+      "description": "City name (default)",
+      "required": true
+    },
+    "age": {
+      "type": "Int64",
+      "query": ["="],
+      "order": true,
+      "description": "City age",
+      "required": true
+    },
+    "area": {
+      "type": "Float64",
+      "query": ["="],
+      "order": true,
+      "description": "City age",
+      "required": true
+    },
+    "str_list": {
+      "type": "List<String>",
+      "query": ["=", "in"],
+      "description": "City labels",
+      "required": true
+    },
+    "str_map": {
+      "type": "Map<String>",
+      "query": ["=", "in"],
+      "description": "City maps",
+      "required": true
+    },
+    "gen_list": {
+      "type": "List<DB.Geo>",
+      "query": ["=", "in"],
+      "description": "City labels",
+      "required": true
+    },
+    "gen_map": {
+      "type": "Map<DB.Geo>",
+      "query": ["=", "in"],
+      "description": "City maps",
       "required": true
     },
     "geo": { "type": "DB.Geo", "query": ["=", "in"] },
@@ -17,7 +83,22 @@
   "views": {
     "Full": {
       "cache": "30d",
-      "columns": ["id", "name", "geo@Full", "active"]
+      "columns": [
+        "id",
+        "name_16",
+        "name_32",
+        "name_64",
+        "name_256",
+        "name",
+        "age",
+        "area",
+        "str_list",
+        "str_map",
+        "gen_list@Full",
+        "gen_map@Full",
+        "geo@Full",
+        "active"
+      ]
     },
     "Simple": {
       "cache": "30d",

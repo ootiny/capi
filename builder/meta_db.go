@@ -96,7 +96,7 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 			return "Int64"
 		case "Float64":
 			return "Float64"
-		case "String", "String32", "String64", "String256":
+		case "String", "String16", "String32", "String64", "String256":
 			return "String"
 		case "List<String>":
 			return "List<String>"
