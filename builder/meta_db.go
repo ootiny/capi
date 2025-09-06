@@ -86,33 +86,33 @@ func (p *DBTableMeta) GetFilePath() string {
 }
 
 func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
-	fnDBTypeToAPIType := func(v string, klass string) string {
+	fnDBTypeToAPIType := func(v string, klass string) (string, error) {
 		switch v {
 		case "PK":
-			return "String"
+			return "String", nil
 		case "Bool":
-			return "Bool"
+			return "Bool", nil
 		case "Int64":
-			return "Int64"
+			return "Int64", nil
 		case "Float64":
-			return "Float64"
+			return "Float64", nil
 		case "String", "String16", "String32", "String64", "String256":
-			return "String"
+			return "String", nil
 		case "List<String>":
-			return "List<String>"
+			return "List<String>", nil
 		case "Map<String>":
-			return "Map<String>"
+			return "Map<String>", nil
 		default:
 			if strings.HasPrefix(v, "List<") && strings.HasSuffix(v, ">") {
 				innerType := v[5 : len(v)-1]
-				return fmt.Sprintf("List<%s@%s>", innerType, klass)
+				return fmt.Sprintf("List<%s@%s>", innerType, klass), nil
 			} else if strings.HasPrefix(v, "Map<") && strings.HasSuffix(v, ">") {
 				innerType := v[4 : len(v)-1]
-				return fmt.Sprintf("Map<%s@%s>", innerType, klass)
+				return fmt.Sprintf("Map<%s@%s>", innerType, klass), nil
 			} else if strings.HasPrefix(v, DBPrefix) {
-				return fmt.Sprintf("%s@%s", v, klass)
+				return fmt.Sprintf("%s@%s", v, klass), nil
 			} else {
-				return v
+				return "", fmt.Errorf("invalid column type: %s", v)
 			}
 		}
 	}
@@ -128,10 +128,18 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 			columnArray := strings.Split(column, "@")
 			if len(columnArray) == 1 {
 				columnName = columnArray[0]
-				columnType = fnDBTypeToAPIType(p.Columns[columnName].Type, "")
+				if apiType, err := fnDBTypeToAPIType(p.Columns[columnName].Type, ""); err != nil {
+					return nil, err
+				} else {
+					columnType = apiType
+				}
 			} else {
 				columnName = columnArray[0]
-				columnType = fnDBTypeToAPIType(p.Columns[columnName].Type, columnArray[1])
+				if apiType, err := fnDBTypeToAPIType(p.Columns[columnName].Type, columnArray[1]); err != nil {
+					return nil, err
+				} else {
+					columnType = apiType
+				}
 			}
 
 			attributes = append(attributes, &APIDefinitionAttributeMeta{
