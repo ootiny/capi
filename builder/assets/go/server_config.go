@@ -1,5 +1,7 @@
 package _rt_package_name_
 
+import "encoding/json"
+
 type DBConnectConfig struct {
 	Driver   string `json:"driver" required:"true"`
 	Host     string `json:"host" required:"true"`
@@ -18,6 +20,14 @@ type DBCacheConfig struct {
 type DBConfig struct {
 	Connect *DBConnectConfig `json:"connect" required:"true"`
 	Cache   *DBCacheConfig   `json:"cache" required:"true"`
+}
+
+func LoadDBConfig(jsonStr string) (*DBConfig, error) {
+	var config DBConfig
+	if err := json.Unmarshal([]byte(jsonStr), &config); err != nil {
+		return nil, err
+	}
+	return &config, nil
 }
 
 type DBTableColumn struct {
@@ -50,4 +60,12 @@ type DBTable struct {
 	Columns   map[string]*DBTableColumn `json:"columns"`
 	Views     map[string]*DBTableView   `json:"views"`
 	File      string                    `json:"file"`
+}
+
+func LoadDBTable(jsonStr string) (*DBTable, error) {
+	var table DBTable
+	if err := json.Unmarshal([]byte(jsonStr), &table); err != nil {
+		return nil, err
+	}
+	return &table, nil
 }

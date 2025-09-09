@@ -86,7 +86,19 @@ func Test_Error_AddHeader(t *testing.T) {
 
 	t.Run("error is not nil", func(t *testing.T) {
 		assert := NewAssert(t)
-		assert(Errorf("error message").AddHeader("header %s", "test")).Equals(Errorf("header test: error message"))
+		assert(Errorf("error message").AddHeader("header")).Equals(Errorf("header: error message"))
+	})
+}
+
+func Test_Error_AddHeaderf(t *testing.T) {
+	t.Run("error is nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert((*Error)(nil).AddHeaderf("header")).Equals(nil)
+	})
+
+	t.Run("error is not nil", func(t *testing.T) {
+		assert := NewAssert(t)
+		assert(Errorf("error message").AddHeaderf("header %s", "test")).Equals(Errorf("header test: error message"))
 	})
 }
 

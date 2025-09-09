@@ -70,12 +70,16 @@ func (p *Error) SetCode(code int) *Error {
 	return p
 }
 
-func (p *Error) AddHeader(format string, args ...any) error {
+func (p *Error) AddHeader(header string) error {
 	if p != nil {
-		p.message = fmt.Sprintf(format, args...) + ": " + p.message
+		p.message = header + ": " + p.message
 	}
 
 	return p
+}
+
+func (p *Error) AddHeaderf(format string, args ...any) error {
+	return p.AddHeader(fmt.Sprintf(format, args...))
 }
 
 func convertToError(err error) *Error {

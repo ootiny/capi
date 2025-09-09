@@ -9,8 +9,12 @@ import (
 	"strings"
 )
 
-var goEngineMap = map[string]string{
-	"net/http": "engine_net_http.go",
+var goApiEngineMap = map[string]string{
+	"net/http": "api_engine_net_http.go",
+}
+
+var goDBAgentMap = map[string]string{
+	"postgres": "db_agent_postgres.go",
 }
 
 func toGolangName(name string) string {
@@ -79,11 +83,14 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 			"package _rt_package_name_": fmt.Sprintf("package %s", ctx.output.GoPackage),
 		},
 		[]string{
-			fmt.Sprintf("assets/go/%s", goEngineMap[ctx.output.HttpEngine]),
+			fmt.Sprintf("assets/go/%s", goApiEngineMap[ctx.output.HttpEngine]),
+			fmt.Sprintf("assets/go/%s", goDBAgentMap[ctx.rtConfig.DB.Connect.Driver]),
 			"assets/go/pub_error.go",
 			"assets/go/server_common.go",
 			"assets/go/server_config.go",
-			"assets/go/server_sql_common.go",
+			"assets/go/server_db_common.go",
+			"assets/go/server_db_manager.go",
+			"assets/go/server_db_tx.go",
 		},
 	)
 	if err != nil {
@@ -339,6 +346,11 @@ func (p *GoBuilder) buildServerWithMeta(ctx *BuildContext, apiMeta *APIMeta) (ma
 
 func (p *GoBuilder) buildDB(ctx *BuildContext) (map[string]string, error) {
 	ret := map[string]string{}
+
+	ret[filepath.Join(ctx.output.Dir, "server_db_assets.go")] = fmt.Sprintf(
+		"package %s\nimport \"embed\"\n//go:embed all:db\nvar dbAssets embed.FS",
+		ctx.output.GoPackage,
+	)
 
 	assetDir := filepath.Join(ctx.output.Dir, "db")
 
