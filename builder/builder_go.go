@@ -345,11 +345,35 @@ func (p *GoBuilder) buildServerWithMeta(ctx *BuildContext, apiMeta *APIMeta) (ma
 }
 
 func (p *GoBuilder) buildDB(ctx *BuildContext) (map[string]string, error) {
+	const runtimeeTpl = `
+import "embed"
+
+//go:embed all:db
+var gDBAssets embed.FS
+var gDBManager *SQLManager
+
+func GetDBManager() *SQLManager {
+	return gDBManager
+}
+
+func init() {
+	if dbManager, err := NewSQLManager(&gDBAssets); err != nil {
+		panic(err)
+	} else if err := dbManager.Open(); err != nil {
+		panic(err)
+	} else {
+		gDBManager = dbManager
+	}
+}
+`
 	ret := map[string]string{}
 
-	ret[filepath.Join(ctx.output.Dir, "server_db_assets.go")] = fmt.Sprintf(
-		"package %s\nimport \"embed\"\n//go:embed all:db\nvar dbAssets embed.FS",
+	// 	package runtime
+
+	ret[filepath.Join(ctx.output.Dir, "server_runtime.go")] = fmt.Sprintf(
+		"package %s\n%s",
 		ctx.output.GoPackage,
+		runtimeeTpl,
 	)
 
 	assetDir := filepath.Join(ctx.output.Dir, "db")
