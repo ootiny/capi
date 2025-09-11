@@ -46,7 +46,7 @@ func NewSQLManager(dbAssets *embed.FS) (*SQLManager, error) {
 				config.Connect.DBName,
 			),
 		); err != nil {
-			return nil, err
+			return nil, WrapError(err)
 		} else {
 			return &SQLManager{
 				agent:    agent,
