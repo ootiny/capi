@@ -23,9 +23,9 @@ func NewSQLManager(dbAssets *embed.FS) (*SQLManager, error) {
 	if dbAssets == nil {
 		return nil, fmt.Errorf("dbAssets is nil")
 	} else if configContent, err := dbAssets.ReadFile("config.json"); err != nil {
-		return nil, err
+		return nil, WrapError(err)
 	} else if config, err := LoadDBConfig(string(configContent)); err != nil {
-		return nil, err
+		return nil, WrapError(err)
 	} else {
 		agent := ISqlAgent(nil)
 
