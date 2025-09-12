@@ -358,9 +358,9 @@ func GetDBManager() *SQLManager {
 
 func init() {
 	if dbManager, err := NewSQLManager(&gDBAssets); err != nil {
-		panic(err)
+		panic(DebugError(err))
 	} else if err := dbManager.Open(); err != nil {
-		panic(err)
+		panic(DebugError(err))
 	} else {
 		gDBManager = dbManager
 	}

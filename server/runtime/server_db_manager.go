@@ -22,10 +22,10 @@ type SQLManager struct {
 func NewSQLManager(dbAssets *embed.FS) (*SQLManager, error) {
 	if dbAssets == nil {
 		return nil, fmt.Errorf("dbAssets is nil")
-	} else if configContent, err := dbAssets.ReadFile("config.json"); err != nil {
-		return nil, WrapError(err)
+	} else if configContent, err := dbAssets.ReadFile("db/config.json"); err != nil {
+		return nil, err
 	} else if config, err := LoadDBConfig(string(configContent)); err != nil {
-		return nil, WrapError(err)
+		return nil, err
 	} else {
 		agent := ISqlAgent(nil)
 
@@ -46,7 +46,7 @@ func NewSQLManager(dbAssets *embed.FS) (*SQLManager, error) {
 				config.Connect.DBName,
 			),
 		); err != nil {
-			return nil, WrapError(err)
+			return nil, err
 		} else {
 			return &SQLManager{
 				agent:    agent,

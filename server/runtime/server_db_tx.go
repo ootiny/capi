@@ -12,6 +12,10 @@ import (
 )
 
 func (p *DBTable) GetColumnsTypeMap() map[string]string {
+	if p == nil {
+		return nil
+	}
+
 	ret := make(map[string]string)
 	for columnName, column := range p.Columns {
 		ret[columnName] = column.Type
@@ -20,6 +24,10 @@ func (p *DBTable) GetColumnsTypeMap() map[string]string {
 }
 
 func (p *DBTable) GetIndexes() []string {
+	if p == nil {
+		return nil
+	}
+
 	ret := make([]string, 0)
 	for columnName, column := range p.Columns {
 		if column.Index {
@@ -30,6 +38,10 @@ func (p *DBTable) GetIndexes() []string {
 }
 
 func (p *DBTable) GetUniques() []string {
+	if p == nil {
+		return nil
+	}
+
 	ret := make([]string, 0)
 	for columnName, column := range p.Columns {
 		if column.Unique {
