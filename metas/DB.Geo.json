@@ -1,5 +1,5 @@
 {
-  "version": "rt.db.v1",
+  "version": "config.db.v1",
   "table": "DB.Geo",
   "description": "Geo model",
   "columns": {

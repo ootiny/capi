@@ -20,8 +20,12 @@ import (
 //
 //go:embed all:assets
 var assets embed.FS
-var APIVersions = []string{"rt.api.v1"}
-var DBVersions = []string{"rt.db.v1"}
+var SupportedAPIVersions = []string{"config.api.v1"}
+var SupportedDBVersions = []string{"config.db.v1"}
+var SupportedDBTableVersions = []string{"dbtable.v1"}
+var CurrentAPIVersion = SupportedAPIVersions[len(SupportedAPIVersions)-1]
+var CurrentDBVersion = SupportedDBVersions[len(SupportedDBVersions)-1]
+var CurrentDBTableVersion = SupportedDBTableVersions[len(SupportedDBTableVersions)-1]
 
 const MainLocation = "main"
 const DBPrefix = "DB."

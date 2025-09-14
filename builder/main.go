@@ -51,14 +51,14 @@ func Build() error {
 			case ".json", ".yaml", ".yml":
 				if err := UnmarshalConfig(path, &header); err != nil {
 					return nil // Not a rt meta file, just ignore.  continue walking
-				} else if slices.Contains(APIVersions, header.Version) {
+				} else if slices.Contains(SupportedAPIVersions, header.Version) {
 					if apiConfig, err := LoadAPIMeta(path); err != nil {
 						return err
 					} else {
 						apiMetas = append(apiMetas, apiConfig)
 						return nil
 					}
-				} else if slices.Contains(DBVersions, header.Version) {
+				} else if slices.Contains(SupportedDBVersions, header.Version) {
 					if dbConfig, err := LoadDBTableMeta(path); err != nil {
 						return err
 					} else {

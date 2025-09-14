@@ -154,7 +154,7 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 	}
 
 	return &APIMeta{
-		Version:     "rt.db.v1",
+		Version:     CurrentAPIVersion,
 		Namespace:   p.Table,
 		Definitions: definitions,
 	}, nil
@@ -246,7 +246,7 @@ func (p *DBTableMeta) ToDBTable() (*DBTable, error) {
 	}
 
 	return &DBTable{
-		Version:   "rt.dbtable.v1",
+		Version:   CurrentDBTableVersion,
 		Table:     NamespaceToTableName(p.Table),
 		Columns:   columns,
 		Views:     views,

@@ -5,6 +5,24 @@ import (
 	"github.com/ootiny/capi/server/runtime"
 )
 
+// definition: DB.City@Simple
+type Simple struct {
+	Id string `json:"id" required:"true"`
+	Name string `json:"name" required:"true"`
+}
+
+type SimpleBytes = []byte
+func UnmarshalSimple(data []byte, v *Simple) *runtime.Error {
+	 return runtime.JsonUnmarshal(data, v)
+}
+func SimpleBytesToSimple(data []byte) (*Simple, *runtime.Error) {
+	var v Simple
+	if err := runtime.JsonUnmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 // definition: DB.City@Full
 type Full struct {
 	Id string `json:"id" required:"true"`
@@ -29,24 +47,6 @@ func UnmarshalFull(data []byte, v *Full) *runtime.Error {
 }
 func FullBytesToFull(data []byte) (*Full, *runtime.Error) {
 	var v Full
-	if err := runtime.JsonUnmarshal(data, &v); err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
-// definition: DB.City@Simple
-type Simple struct {
-	Id string `json:"id" required:"true"`
-	Name string `json:"name" required:"true"`
-}
-
-type SimpleBytes = []byte
-func UnmarshalSimple(data []byte, v *Simple) *runtime.Error {
-	 return runtime.JsonUnmarshal(data, v)
-}
-func SimpleBytesToSimple(data []byte) (*Simple, *runtime.Error) {
-	var v Simple
 	if err := runtime.JsonUnmarshal(data, &v); err != nil {
 		return nil, err
 	}
