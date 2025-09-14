@@ -246,7 +246,7 @@ func (p *DBTableMeta) ToDBTable() (*DBTable, error) {
 	}
 
 	return &DBTable{
-		Version:   "rt.dbservice.v1",
+		Version:   "rt.dbtable.v1",
 		Table:     NamespaceToTableName(p.Table),
 		Columns:   columns,
 		Views:     views,

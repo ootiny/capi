@@ -1,5 +1,5 @@
 {
-  "version": "rt.dbservice.v1",
+  "version": "rt.dbtable.v1",
   "namespace": "DB.City",
   "table": "city",
   "columns": {
