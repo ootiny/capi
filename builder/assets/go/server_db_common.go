@@ -334,11 +334,12 @@ func NewWebQuery(name string, queries map[string]any, orders []string) *SqlQuery
 		if len(arr) != 2 {
 			continue
 		}
-		if arr[1] == "ascend" {
+		switch arr[1] {
+		case "ascend":
 			ret.OrderByAsc(arr[0])
-		} else if arr[1] == "descend" {
+		case "descend":
 			ret.OrderByDesc(arr[0])
-		} else {
+		default:
 			continue
 		}
 	}
