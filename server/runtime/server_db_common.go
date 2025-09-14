@@ -374,7 +374,7 @@ func SqlDecodeFromDB(kind string, v any) (any, error) {
 	switch kind {
 	case "PK", "LK", "Bool", "Int64", "Float64", "String", "String256", "Bytes":
 		return v, nil
-	case "StringArray", "LKArray":
+	case "List<String>", "LKList":
 		ret := make([]string, 0)
 		if v == nil {
 			return make([]string, 0), nil
@@ -385,7 +385,7 @@ func SqlDecodeFromDB(kind string, v any) (any, error) {
 		} else {
 			return ret, nil
 		}
-	case "StringMap", "LKMap":
+	case "Map<String>", "LKMap":
 		ret := make(map[string]any)
 		if v == nil {
 			return make(map[string]any), nil

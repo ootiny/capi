@@ -109,6 +109,24 @@ func (p *PGSqlAgent) AddColumn(serviceName string, columnName string, columnType
 			serviceName,
 			columnName,
 		)
+	case "String16":
+		return fmt.Sprintf(
+			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" varchar(16) NOT NULL DEFAULT '';",
+			serviceName,
+			columnName,
+		)
+	case "String32":
+		return fmt.Sprintf(
+			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" varchar(32) NOT NULL DEFAULT '';",
+			serviceName,
+			columnName,
+		)
+	case "String64":
+		return fmt.Sprintf(
+			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" varchar(64) NOT NULL DEFAULT '';",
+			serviceName,
+			columnName,
+		)
 	case "String256":
 		return fmt.Sprintf(
 			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" varchar(256) NOT NULL DEFAULT '';",
@@ -121,37 +139,19 @@ func (p *PGSqlAgent) AddColumn(serviceName string, columnName string, columnType
 			serviceName,
 			columnName,
 		)
-	case "StringArray":
+	case "List<String>":
 		return fmt.Sprintf(
 			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '[]';",
 			serviceName,
 			columnName,
 		)
-	case "StringMap":
+	case "Map<String>":
 		return fmt.Sprintf(
 			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '{}';",
 			serviceName,
 			columnName,
 		)
-	case "File":
-		return fmt.Sprintf(
-			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '';",
-			serviceName,
-			columnName,
-		)
-	case "FileArray":
-		return fmt.Sprintf(
-			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '[]';",
-			serviceName,
-			columnName,
-		)
-	case "FileMap":
-		return fmt.Sprintf(
-			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '{}';",
-			serviceName,
-			columnName,
-		)
-	case "LKArray":
+	case "LKList":
 		return fmt.Sprintf(
 			"ALTER TABLE \"%s\" ADD COLUMN \"%s\" text NOT NULL DEFAULT '[]';",
 			serviceName,

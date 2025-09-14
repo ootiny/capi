@@ -20,7 +20,7 @@ const (
 )
 
 var (
-	errorTracingEnabled = atomic.Bool{}
+	noTraceError = atomic.Bool{}
 )
 
 func FirstError(errs ...error) error {
@@ -34,11 +34,11 @@ func FirstError(errs ...error) error {
 }
 
 func SetTraceError(traceError bool) {
-	errorTracingEnabled.Store(traceError)
+	noTraceError.Store(!traceError)
 }
 
 func IsTraceError() bool {
-	return errorTracingEnabled.Load()
+	return !noTraceError.Load()
 }
 
 type Error struct {
@@ -133,11 +133,11 @@ func DebugError(err error) string {
 		return ""
 	}
 
-	ret := fmt.Sprintf("Message: %s\n", e.message)
-	ret += fmt.Sprintf("Code: %d\n", e.code)
+	ret := fmt.Sprintf("[Message]: %s\n", e.message)
+	ret += fmt.Sprintf("[Code]: %d\n", e.code)
 
 	for i := len(e.traces) - 1; i >= 0; i-- {
-		ret += fmt.Sprintf("\t[Stack %04d]: %s\n", i+1, e.traces[i])
+		ret += fmt.Sprintf("[Stack %04d]: %s\n", i+1, e.traces[i])
 	}
 	return ret
 }
