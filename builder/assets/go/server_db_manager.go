@@ -145,6 +145,10 @@ func (p *SQLManager) Open() error {
 	tx := p.NewTransaction(SqlLevelSerializable, false)
 
 	for _, file := range files {
+		if file == "db/config.json" {
+			continue
+		}
+
 		if fContent, e := p.dbAssets.ReadFile(file); e != nil {
 			_ = tx.Close(false)
 			return WrapError(e)

@@ -9,6 +9,8 @@
       "query": ["=", "in", "like"],
       "order": true,
       "description": "City name (16 bytes)",
+      "index": false,
+      "unique": false,
       "required": true
     },
     "name_32": {
