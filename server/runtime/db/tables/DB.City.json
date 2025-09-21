@@ -37,7 +37,19 @@
       "required": true,
       "linkTable": ""
     },
-    "gen_list": {
+    "geo": {
+      "type": "LK",
+      "queryMap": {
+        "=": true,
+        "in": true
+      },
+      "unique": false,
+      "index": false,
+      "order": false,
+      "required": false,
+      "linkTable": "geo"
+    },
+    "geo_list": {
       "type": "LKList",
       "queryMap": {
         "=": true,
@@ -49,7 +61,7 @@
       "required": true,
       "linkTable": "geo"
     },
-    "gen_map": {
+    "geo_map": {
       "type": "LKMap",
       "queryMap": {
         "=": true,
@@ -59,18 +71,6 @@
       "index": false,
       "order": false,
       "required": true,
-      "linkTable": "geo"
-    },
-    "geo": {
-      "type": "LK",
-      "queryMap": {
-        "=": true,
-        "in": true
-      },
-      "unique": false,
-      "index": false,
-      "order": false,
-      "required": false,
       "linkTable": "geo"
     },
     "id": {
@@ -229,12 +229,12 @@
           "linkView": ""
         },
         {
-          "name": "gen_list",
+          "name": "geo_list",
           "linkTable": "geo",
           "linkView": "Full"
         },
         {
-          "name": "gen_map",
+          "name": "geo_map",
           "linkTable": "geo",
           "linkView": "Full"
         },
@@ -249,9 +249,9 @@
           "linkView": ""
         }
       ],
-      "columnsSelect": "id,name_16,name_32,name_64,name_256,name,age,area,str_list,str_map,gen_list,gen_map,geo,active",
+      "columnsSelect": "id,name_16,name_32,name_64,name_256,name,age,area,str_list,str_map,geo_list,geo_map,geo,active",
       "cacheSecond": 2592000,
-      "hash": "BeCrPiwGf"
+      "hash": "BxasZy/C9"
     },
     "Simple": {
       "columns": [

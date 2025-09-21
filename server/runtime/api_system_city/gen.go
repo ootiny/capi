@@ -11,21 +11,37 @@ type CityList struct {
 	List []db_city.Full `json:"list" required:"true"`
 }
 
+// Action: API.System.City:AddCity
+var fnAddCity FuncAddCity
+type FuncAddCity = func(ctx *runtime.Context, city db_city.Default) (db_city.Default, *runtime.Error)
+func OnAddCity (fn FuncAddCity) {
+	fnAddCity = fn
+}
+
 // Action: API.System.City:GetCityList
 var fnGetCityList FuncGetCityList
 type FuncGetCityList = func(ctx *runtime.Context, country string) (CityList, *runtime.Error)
-func HookGetCityList (fn FuncGetCityList) {
+func OnGetCityList (fn FuncGetCityList) {
 	fnGetCityList = fn
 }
 
-// Action: API.System.City:Test
-var fnTest FuncTest
-type FuncTest = func(ctx *runtime.Context) ([]db_city.Simple, *runtime.Error)
-func HookTest (fn FuncTest) {
-	fnTest = fn
-}
-
 func init() {
+	runtime.RegisterHandler("API.System.City:AddCity", func(ctx *runtime.Context, data []byte) *runtime.Return {
+		var v struct {
+			City db_city.Default `json:"city" required:"true"`
+		}
+		if err := runtime.JsonUnmarshal(data, &v); err != nil {
+			return nil
+		}
+
+		if fnAddCity == nil {
+			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:AddCity is not implemented"}
+		} else if result, err := fnAddCity(ctx, v.City); err != nil {
+			return &runtime.Return{Code: err.Code(), Message: err.Error()}
+		} else {
+			return &runtime.Return{Data: result}
+		}
+	})
 	runtime.RegisterHandler("API.System.City:GetCityList", func(ctx *runtime.Context, data []byte) *runtime.Return {
 		var v struct {
 			Country string `json:"country" required:"true"`
@@ -37,15 +53,6 @@ func init() {
 		if fnGetCityList == nil {
 			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:GetCityList is not implemented"}
 		} else if result, err := fnGetCityList(ctx, v.Country); err != nil {
-			return &runtime.Return{Code: err.Code(), Message: err.Error()}
-		} else {
-			return &runtime.Return{Data: result}
-		}
-	})
-	runtime.RegisterHandler("API.System.City:Test", func(ctx *runtime.Context, data []byte) *runtime.Return {
-		if fnTest == nil {
-			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Test is not implemented"}
-		} else if result, err := fnTest(ctx); err != nil {
 			return &runtime.Return{Code: err.Code(), Message: err.Error()}
 		} else {
 			return &runtime.Return{Data: result}

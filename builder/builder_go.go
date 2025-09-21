@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+
+	"github.com/ootiny/capi/utils"
 )
 
 var goApiEngineMap = map[string]string{
@@ -109,7 +111,7 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 
 	for _, dbMeta := range ctx.dbMetas {
 		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
-			return nil, err
+			return nil, utils.WrapError(err)
 		} else {
 			metas = append(metas, apiMeta)
 		}
@@ -266,7 +268,7 @@ func (p *GoBuilder) buildServerWithMeta(ctx *BuildContext, apiMeta *APIMeta) (ma
 				returnStr,
 			))
 			actions = append(actions, fmt.Sprintf(
-				"func Hook%s (fn Func%s) {\n\tfn%s = fn\n}\n",
+				"func On%s (fn Func%s) {\n\tfn%s = fn\n}\n",
 				name,
 				name,
 				name,

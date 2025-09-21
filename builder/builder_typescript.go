@@ -4,8 +4,9 @@ import (
 	"fmt"
 	"maps"
 	"path/filepath"
-	"slices"
 	"strings"
+
+	"github.com/ootiny/capi/utils"
 )
 
 func toTypeScriptType(location string, currentPackage string, name string) (string, string) {
@@ -74,7 +75,7 @@ func (p *TypescriptBuilder) BuildClient(ctx *BuildContext) (map[string]string, e
 	metas = append(metas, ctx.apiMetas...)
 	for _, dbMeta := range ctx.dbMetas {
 		if apiMeta, err := dbMeta.ToAPIMeta(); err != nil {
-			return nil, err
+			return nil, utils.WrapError(err)
 		} else {
 			metas = append(metas, apiMeta)
 		}
@@ -217,8 +218,14 @@ func (p *TypescriptBuilder) buildClientWithMetaNode(ctx *BuildContext, metaNode 
 
 	importsContent := ""
 	if len(imports) > 0 {
-		imports = slices.Compact(imports)
-		importsContent = strings.Join(imports, "\n") + "\n"
+		// remove duplicate imports
+		importMap := map[string]bool{}
+		for _, importStr := range imports {
+			importMap[importStr] = true
+		}
+		for importStr := range importMap {
+			importsContent += importStr + "\n"
+		}
 	}
 
 	defineContent := ""

@@ -22,11 +22,19 @@
     }
   },
   "actions": {
-    "Test": {
-      "description": "Test",
-      "method": "GET",
+    "AddCity": {
+      "description": "Add a city",
+      "method": "POST",
+      "parameters": [
+        {
+          "name": "city",
+          "type": "DB.City@Default",
+          "required": true,
+          "description": "The city"
+        }
+      ],
       "return": {
-        "type": "List<DB.City@Simple>",
+        "type": "DB.City@Default",
         "description": "The city"
       }
     },

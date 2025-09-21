@@ -12,6 +12,11 @@ export class __Main__ {
 		this.url = url;
 	}
 
+	// action: API.System.City:AddCity
+	async AddCity(city: db_city.Default): Promise<db_city.Default> {
+		return fetchJson(this.url, "API.System.City:AddCity", "POST", { city })
+	}
+
 	// action: API.System.City:GetCityList
 	async GetCityList(country: string): Promise<CityList> {
 		return fetchJson(this.url, "API.System.City:GetCityList", "GET", { country })

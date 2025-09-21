@@ -2,6 +2,7 @@ package builder
 
 import (
 	"fmt"
+	"maps"
 	"sort"
 	"strings"
 	"time"
@@ -86,40 +87,26 @@ func (p *DBTableMeta) GetFilePath() string {
 }
 
 func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
-	fnDBTypeToAPIType := func(v string, klass string) (string, error) {
-		switch v {
-		case "PK":
-			return "String", nil
-		case "Bool":
-			return "Bool", nil
-		case "Int64":
-			return "Int64", nil
-		case "Float64":
-			return "Float64", nil
-		case "String", "String16", "String32", "String64", "String256":
-			return "String", nil
-		case "List<String>":
-			return "List<String>", nil
-		case "Map<String>":
-			return "Map<String>", nil
-		default:
-			if strings.HasPrefix(v, "List<") && strings.HasSuffix(v, ">") {
-				innerType := v[5 : len(v)-1]
-				return fmt.Sprintf("List<%s@%s>", innerType, klass), nil
-			} else if strings.HasPrefix(v, "Map<") && strings.HasSuffix(v, ">") {
-				innerType := v[4 : len(v)-1]
-				return fmt.Sprintf("Map<%s@%s>", innerType, klass), nil
-			} else if strings.HasPrefix(v, DBPrefix) {
-				return fmt.Sprintf("%s@%s", v, klass), nil
-			} else {
-				return "", fmt.Errorf("invalid column type: %s", v)
-			}
-		}
-	}
-
 	definitions := map[string]*APIDefinitionMeta{}
 
-	for name, view := range p.Views {
+	if _, ok := p.Views["Default"]; ok {
+		return nil, fmt.Errorf("Default view can not be defined")
+	}
+
+	// define default view
+	defaultViewColumns := []string{}
+	for columnName := range p.Columns {
+		defaultViewColumns = append(defaultViewColumns, columnName)
+	}
+	views := map[string]*DBTableViewMeta{
+		"Default": {
+			Columns: defaultViewColumns,
+		},
+	}
+	maps.Copy(views, p.Views)
+
+	// convert views
+	for name, view := range views {
 		attributes := []*APIDefinitionAttributeMeta{}
 
 		for _, column := range view.Columns {
@@ -128,14 +115,14 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 			columnArray := strings.Split(column, "@")
 			if len(columnArray) == 1 {
 				columnName = columnArray[0]
-				if apiType, err := fnDBTypeToAPIType(p.Columns[columnName].Type, ""); err != nil {
+				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, "Default"); err != nil {
 					return nil, err
 				} else {
 					columnType = apiType
 				}
 			} else {
 				columnName = columnArray[0]
-				if apiType, err := fnDBTypeToAPIType(p.Columns[columnName].Type, columnArray[1]); err != nil {
+				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, columnArray[1]); err != nil {
 					return nil, err
 				} else {
 					columnType = apiType

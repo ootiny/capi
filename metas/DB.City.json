@@ -67,13 +67,13 @@
       "description": "City maps",
       "required": true
     },
-    "gen_list": {
+    "geo_list": {
       "type": "List<DB.Geo>",
       "query": ["=", "in"],
       "description": "City labels",
       "required": true
     },
-    "gen_map": {
+    "geo_map": {
       "type": "Map<DB.Geo>",
       "query": ["=", "in"],
       "description": "City maps",
@@ -96,8 +96,8 @@
         "area",
         "str_list",
         "str_map",
-        "gen_list@Full",
-        "gen_map@Full",
+        "geo_list@Full",
+        "geo_map@Full",
         "geo@Full",
         "active"
       ]

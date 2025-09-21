@@ -45,8 +45,40 @@ var APIBaseTypes = []string{
 }
 
 // 将DB类型转换为API类型
-func DBTypeToApiType(dbType string) (string, error) {
-	switch dbType {
+
+// func(columnType string, viewName string) (string, error) {
+// 	switch columnType {
+// 	case "PK":
+// 		return "String", nil
+// 	case "Bool":
+// 		return "Bool", nil
+// 	case "Int64":
+// 		return "Int64", nil
+// 	case "Float64":
+// 		return "Float64", nil
+// 	case "String", "String16", "String32", "String64", "String256":
+// 		return "String", nil
+// 	case "List<String>":
+// 		return "List<String>", nil
+// 	case "Map<String>":
+// 		return "Map<String>", nil
+// 	default:
+// 		if strings.HasPrefix(columnType, "List<") && strings.HasSuffix(columnType, ">") {
+// 			innerType := columnType[5 : len(columnType)-1]
+// 			return fmt.Sprintf("List<%s@%s>", innerType, viewName), nil
+// 		} else if strings.HasPrefix(columnType, "Map<") && strings.HasSuffix(columnType, ">") {
+// 			innerType := columnType[4 : len(columnType)-1]
+// 			return fmt.Sprintf("Map<%s@%s>", innerType, viewName), nil
+// 		} else if strings.HasPrefix(columnType, DBPrefix) {
+// 			return fmt.Sprintf("%s@%s", columnType, viewName), nil
+// 		} else {
+// 			return "", fmt.Errorf("invalid column type: %s", columnType)
+// 		}
+// 	}
+// }
+
+func DBTypeToApiType(dbColumnType string, viewName string) (string, error) {
+	switch dbColumnType {
 	case "PK":
 		return "String", nil
 	case "Bool":
@@ -62,31 +94,31 @@ func DBTypeToApiType(dbType string) (string, error) {
 	case "Map<String>":
 		return "Map<String>", nil
 	default:
-		if strings.HasPrefix(dbType, "List<") && strings.HasSuffix(dbType, ">") {
-			innerType := dbType[5 : len(dbType)-1]
+		if strings.HasPrefix(dbColumnType, "List<") && strings.HasSuffix(dbColumnType, ">") {
+			innerType := dbColumnType[5 : len(dbColumnType)-1]
 			if strings.HasPrefix(innerType, DBPrefix) {
-				return DBTypeToApiType(innerType)
+				return DBTypeToApiType(innerType, viewName)
 			} else {
-				return "", fmt.Errorf("invalid column type: %s", dbType)
+				return "", fmt.Errorf("invalid column type: %s", dbColumnType)
 			}
-		} else if strings.HasPrefix(dbType, "Map<") && strings.HasSuffix(dbType, ">") {
-			innerType := dbType[4 : len(dbType)-1]
+		} else if strings.HasPrefix(dbColumnType, "Map<") && strings.HasSuffix(dbColumnType, ">") {
+			innerType := dbColumnType[4 : len(dbColumnType)-1]
 			if strings.HasPrefix(innerType, DBPrefix) {
-				return DBTypeToApiType(innerType)
+				return DBTypeToApiType(innerType, viewName)
 			} else {
-				return "", fmt.Errorf("invalid column type: %s", dbType)
+				return "", fmt.Errorf("invalid column type: %s", dbColumnType)
 			}
-		} else if strings.HasPrefix(dbType, DBPrefix) {
-			columnArray := strings.Split(dbType, "@")
+		} else if strings.HasPrefix(dbColumnType, DBPrefix) {
+			columnArray := strings.Split(dbColumnType, "@")
 			if len(columnArray) == 1 {
-				return fmt.Sprintf("%s@Default", columnArray[0]), nil
+				return fmt.Sprintf("%s@%s", columnArray[0], viewName), nil
 			} else if len(columnArray) == 2 {
 				return fmt.Sprintf("%s@%s", columnArray[0], columnArray[1]), nil
 			} else {
-				return "", fmt.Errorf("invalid column type: %s", dbType)
+				return "", fmt.Errorf("invalid column type: %s", dbColumnType)
 			}
 		} else {
-			return "", fmt.Errorf("invalid column type: %s", dbType)
+			return "", fmt.Errorf("invalid column type: %s", dbColumnType)
 		}
 	}
 }
@@ -163,7 +195,7 @@ func UnmarshalConfig(filePath string, v any) error {
 func TimeStringToDuration(timeStr string) (time.Duration, error) {
 	s := strings.TrimSpace(timeStr)
 	if s == "" {
-		return 0, fmt.Errorf("time string is empty")
+		return 0, nil
 	}
 
 	// Validate the whole string first: sequences like 1h30m, 2d, 5m, etc.
