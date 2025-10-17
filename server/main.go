@@ -7,14 +7,24 @@ import (
 )
 
 func init() {
-	api_system_city.OnAddCity(
-		func(ctx *runtime.Context, city db_city.Default) (db_city.Default, *runtime.Error) {
-			return city, nil
+	api_system_city.OnCreate(
+		func(ctx *runtime.Context, city db_city.Create) (db_city.Default, *runtime.Error) {
+			return db_city.Create(city)
 		})
 
-	api_system_city.OnGetCityList(
-		func(ctx *runtime.Context, country string) (api_system_city.CityList, *runtime.Error) {
-			return db_city.QueryFull(ctx, runtime.SqlWhere{})
+	api_system_city.OnDelete(
+		func(ctx *runtime.Context, city db_city.Delete) (db_city.Default, *runtime.Error) {
+			return db_city.Delete(id)
+		})
+
+	api_system_city.OnUpdate(
+		func(ctx *runtime.Context, data db_city.Update) (db_city.Default, *runtime.Error) {
+			return db_city.Update(ctx, data)
+		})
+
+	api_system_city.OnQuery(
+		func(ctx *runtime.Context, query db_city.Query) (api_system_city.CityList, *runtime.Error) {
+			return db_city.QueryFull(ctx, query)
 		})
 }
 

@@ -89,8 +89,8 @@ func (p *DBTableMeta) GetFilePath() string {
 func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 	definitions := map[string]*APIDefinitionMeta{}
 
-	if _, ok := p.Views["Default"]; ok {
-		return nil, fmt.Errorf("Default view can not be defined")
+	if _, ok := p.Views["Create"]; ok {
+		return nil, fmt.Errorf("Create view can not be defined")
 	}
 
 	// define default view
@@ -99,7 +99,7 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 		defaultViewColumns = append(defaultViewColumns, columnName)
 	}
 	views := map[string]*DBTableViewMeta{
-		"Default": {
+		"Create": {
 			Columns: defaultViewColumns,
 		},
 	}
@@ -115,7 +115,7 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 			columnArray := strings.Split(column, "@")
 			if len(columnArray) == 1 {
 				columnName = columnArray[0]
-				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, "Default"); err != nil {
+				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, "Create"); err != nil {
 					return nil, err
 				} else {
 					columnType = apiType

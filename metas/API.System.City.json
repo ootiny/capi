@@ -4,7 +4,7 @@
   "description": "City API",
   "definitions": {
     "CityList": {
-      "description": "A city",
+      "description": "A city list",
       "attributes": [
         {
           "name": "from",
@@ -22,29 +22,61 @@
     }
   },
   "actions": {
-    "AddCity": {
+    "Create": {
       "description": "Add a city",
       "method": "POST",
       "parameters": [
         {
           "name": "city",
-          "type": "DB.City@Default",
+          "type": "DB.City@Create",
           "required": true,
           "description": "The city"
         }
       ],
       "return": {
-        "type": "DB.City@Default",
+        "type": "DB.City@Create",
         "description": "The city"
       }
     },
-    "GetCityList": {
+    "Delete": {
+      "description": "Delete a city",
+      "method": "POST",
+      "parameters": [
+        {
+          "name": "v",
+          "type": "DB.City@Delete",
+          "required": true,
+          "description": "The country of the city"
+        }
+      ],
+      "return": {
+        "type": "DB.City@Delete",
+        "description": "The city"
+      }
+    },
+    "Update": {
+      "description": "Update a city",
+      "method": "POST",
+      "parameters": [
+        {
+          "name": "v",
+          "type": "DB.City@Update",
+          "required": true,
+          "description": "The country of the city"
+        }
+      ],
+      "return": {
+        "type": "DB.City@Update",
+        "description": "The city"
+      }
+    },
+    "Query": {
       "description": "Get city list",
       "method": "GET",
       "parameters": [
         {
-          "name": "country",
-          "type": "String",
+          "name": "v",
+          "type": "DB.City@Query",
           "required": true,
           "description": "The country of the city"
         }

@@ -12,14 +12,24 @@ export class __Main__ {
 		this.url = url;
 	}
 
-	// action: API.System.City:AddCity
-	async AddCity(city: db_city.Default): Promise<db_city.Default> {
-		return fetchJson(this.url, "API.System.City:AddCity", "POST", { city })
+	// action: API.System.City:Query
+	async Query(v: db_city.Query): Promise<CityList> {
+		return fetchJson(this.url, "API.System.City:Query", "GET", { v })
 	}
 
-	// action: API.System.City:GetCityList
-	async GetCityList(country: string): Promise<CityList> {
-		return fetchJson(this.url, "API.System.City:GetCityList", "GET", { country })
+	// action: API.System.City:Create
+	async Create(city: db_city.Create): Promise<db_city.Create> {
+		return fetchJson(this.url, "API.System.City:Create", "POST", { city })
+	}
+
+	// action: API.System.City:Delete
+	async Delete(v: db_city.Delete): Promise<db_city.Delete> {
+		return fetchJson(this.url, "API.System.City:Delete", "POST", { v })
+	}
+
+	// action: API.System.City:Update
+	async Update(v: db_city.Update): Promise<db_city.Update> {
+		return fetchJson(this.url, "API.System.City:Update", "POST", { v })
 	}
 }
 
