@@ -93,14 +93,17 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 		return nil, fmt.Errorf("Create view can not be defined")
 	}
 
-	// define default view
-	defaultViewColumns := []string{}
+	// define create view and delete view
+	createViewColumns := []string{}
 	for columnName := range p.Columns {
-		defaultViewColumns = append(defaultViewColumns, columnName)
+		createViewColumns = append(createViewColumns, columnName)
 	}
 	views := map[string]*DBTableViewMeta{
 		"Create": {
-			Columns: defaultViewColumns,
+			Columns: createViewColumns,
+		},
+		"Delete": {
+			Columns: []string{"id"},
 		},
 	}
 	maps.Copy(views, p.Views)
