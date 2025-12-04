@@ -11,13 +11,6 @@ type CityList struct {
 	List []db_city.Full `json:"list" required:"true"`
 }
 
-// Action: API.System.City:Create
-var fnCreate FuncCreate
-type FuncCreate = func(ctx *runtime.Context, city db_city.Create) (db_city.Create, *runtime.Error)
-func OnCreate (fn FuncCreate) {
-	fnCreate = fn
-}
-
 // Action: API.System.City:Delete
 var fnDelete FuncDelete
 type FuncDelete = func(ctx *runtime.Context, v db_city.Delete) (db_city.Delete, *runtime.Error)
@@ -39,23 +32,14 @@ func OnQuery (fn FuncQuery) {
 	fnQuery = fn
 }
 
-func init() {
-	runtime.RegisterHandler("API.System.City:Create", func(ctx *runtime.Context, data []byte) *runtime.Return {
-		var v struct {
-			City db_city.Create `json:"city" required:"true"`
-		}
-		if err := runtime.JsonUnmarshal(data, &v); err != nil {
-			return nil
-		}
+// Action: API.System.City:Create
+var fnCreate FuncCreate
+type FuncCreate = func(ctx *runtime.Context, city db_city.Create) (db_city.Create, *runtime.Error)
+func OnCreate (fn FuncCreate) {
+	fnCreate = fn
+}
 
-		if fnCreate == nil {
-			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Create is not implemented"}
-		} else if result, err := fnCreate(ctx, v.City); err != nil {
-			return &runtime.Return{Code: err.Code(), Message: err.Error()}
-		} else {
-			return &runtime.Return{Data: result}
-		}
-	})
+func init() {
 	runtime.RegisterHandler("API.System.City:Delete", func(ctx *runtime.Context, data []byte) *runtime.Return {
 		var v struct {
 			V db_city.Delete `json:"v" required:"true"`
@@ -99,6 +83,22 @@ func init() {
 		if fnQuery == nil {
 			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Query is not implemented"}
 		} else if result, err := fnQuery(ctx, v.V); err != nil {
+			return &runtime.Return{Code: err.Code(), Message: err.Error()}
+		} else {
+			return &runtime.Return{Data: result}
+		}
+	})
+	runtime.RegisterHandler("API.System.City:Create", func(ctx *runtime.Context, data []byte) *runtime.Return {
+		var v struct {
+			City db_city.Create `json:"city" required:"true"`
+		}
+		if err := runtime.JsonUnmarshal(data, &v); err != nil {
+			return nil
+		}
+
+		if fnCreate == nil {
+			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Create is not implemented"}
+		} else if result, err := fnCreate(ctx, v.City); err != nil {
 			return &runtime.Return{Code: err.Code(), Message: err.Error()}
 		} else {
 			return &runtime.Return{Data: result}

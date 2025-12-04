@@ -82,7 +82,7 @@
       "unique": false,
       "index": false,
       "order": false,
-      "required": true,
+      "required": false,
       "linkTable": ""
     },
     "name": {

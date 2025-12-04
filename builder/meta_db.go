@@ -2,7 +2,6 @@ package builder
 
 import (
 	"fmt"
-	"maps"
 	"sort"
 	"strings"
 	"time"
@@ -89,27 +88,40 @@ func (p *DBTableMeta) GetFilePath() string {
 func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 	definitions := map[string]*APIDefinitionMeta{}
 
+	// check predefined views
 	if _, ok := p.Views["Create"]; ok {
 		return nil, fmt.Errorf("Create view can not be defined")
 	}
 
+	if _, ok := p.Views["Delete"]; ok {
+		return nil, fmt.Errorf("Delete view can not be defined")
+	}
+
+	if _, ok := p.Views["Update"]; ok {
+		return nil, fmt.Errorf("Update view can not be defined")
+	}
+
+	if _, ok := p.Views["Query"]; ok {
+		return nil, fmt.Errorf("Query view can not be defined")
+	}
+
 	// define create view and delete view
-	createViewColumns := []string{}
-	for columnName := range p.Columns {
-		createViewColumns = append(createViewColumns, columnName)
-	}
-	views := map[string]*DBTableViewMeta{
-		"Create": {
-			Columns: createViewColumns,
-		},
-		"Delete": {
-			Columns: []string{"id"},
-		},
-	}
-	maps.Copy(views, p.Views)
+	// createViewColumns := []string{}
+	// for columnName := range p.Columns {
+	// 	createViewColumns = append(createViewColumns, columnName)
+	// }
+	// views := map[string]*DBTableViewMeta{
+	// 	"Create": {
+	// 		Columns: createViewColumns,
+	// 	},
+	// 	"Delete": {
+	// 		Columns: []string{"id"},
+	// 	},
+	// }
+	// maps.Copy(views, p.Views)
 
 	// convert views
-	for name, view := range views {
+	for name, view := range p.Views {
 		attributes := []*APIDefinitionAttributeMeta{}
 
 		for _, column := range view.Columns {
@@ -118,7 +130,8 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 			columnArray := strings.Split(column, "@")
 			if len(columnArray) == 1 {
 				columnName = columnArray[0]
-				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, "Create"); err != nil {
+
+				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, ""); err != nil {
 					return nil, err
 				} else {
 					columnType = apiType

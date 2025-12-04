@@ -110,10 +110,10 @@ func DBTypeToApiType(dbColumnType string, viewName string) (string, error) {
 			}
 		} else if strings.HasPrefix(dbColumnType, DBPrefix) {
 			columnArray := strings.Split(dbColumnType, "@")
-			if len(columnArray) == 1 {
-				return fmt.Sprintf("%s@%s", columnArray[0], viewName), nil
-			} else if len(columnArray) == 2 {
+			if len(columnArray) == 2 {
 				return fmt.Sprintf("%s@%s", columnArray[0], columnArray[1]), nil
+			} else if len(columnArray) == 1 && viewName != "" {
+				return fmt.Sprintf("%s@%s", columnArray[0], viewName), nil
 			} else {
 				return "", fmt.Errorf("invalid column type: %s", dbColumnType)
 			}

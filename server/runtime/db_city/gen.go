@@ -5,56 +5,9 @@ import (
 	"github.com/ootiny/capi/server/runtime"
 )
 
-// definition: DB.City@Simple
-type Simple struct {
-	Id string `json:"id" required:"true"`
-	Name string `json:"name" required:"true"`
-}
-
-type SimpleBytes = []byte
-func UnmarshalSimple(data []byte, v *Simple) *runtime.Error {
-	 return runtime.JsonUnmarshal(data, v)
-}
-func SimpleBytesToSimple(data []byte) (*Simple, *runtime.Error) {
-	var v Simple
-	if err := runtime.JsonUnmarshal(data, &v); err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
-// definition: DB.City@Create
-type Create struct {
-	Name_32 string `json:"name_32" required:"true"`
-	Name_256 string `json:"name_256" required:"true"`
-	Name string `json:"name" required:"true"`
-	Age int64 `json:"age" required:"true"`
-	Area float64 `json:"area" required:"true"`
-	Str_list []string `json:"str_list" required:"true"`
-	Str_map map[string]string `json:"str_map" required:"true"`
-	Name_16 string `json:"name_16" required:"true"`
-	Name_64 string `json:"name_64" required:"true"`
-	Geo_list db_geo.Create `json:"geo_list" required:"true"`
-	Geo_map db_geo.Create `json:"geo_map" required:"true"`
-	Geo db_geo.Create `json:"geo" required:"false"`
-	Active bool `json:"active" required:"false"`
-}
-
-type CreateBytes = []byte
-func UnmarshalCreate(data []byte, v *Create) *runtime.Error {
-	 return runtime.JsonUnmarshal(data, v)
-}
-func CreateBytesToCreate(data []byte) (*Create, *runtime.Error) {
-	var v Create
-	if err := runtime.JsonUnmarshal(data, &v); err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
 // definition: DB.City@Full
 type Full struct {
-	Id string `json:"id" required:"true"`
+	Id string `json:"id" required:"false"`
 	Name_16 string `json:"name_16" required:"true"`
 	Name_32 string `json:"name_32" required:"true"`
 	Name_64 string `json:"name_64" required:"true"`
@@ -76,6 +29,24 @@ func UnmarshalFull(data []byte, v *Full) *runtime.Error {
 }
 func FullBytesToFull(data []byte) (*Full, *runtime.Error) {
 	var v Full
+	if err := runtime.JsonUnmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+// definition: DB.City@Simple
+type Simple struct {
+	Id string `json:"id" required:"false"`
+	Name string `json:"name" required:"true"`
+}
+
+type SimpleBytes = []byte
+func UnmarshalSimple(data []byte, v *Simple) *runtime.Error {
+	 return runtime.JsonUnmarshal(data, v)
+}
+func SimpleBytesToSimple(data []byte) (*Simple, *runtime.Error) {
+	var v Simple
 	if err := runtime.JsonUnmarshal(data, &v); err != nil {
 		return nil, err
 	}

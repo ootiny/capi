@@ -4,24 +4,6 @@ import (
 	"github.com/ootiny/capi/server/runtime"
 )
 
-// definition: DB.Geo@Create
-type Create struct {
-	Latitude float64 `json:"latitude" required:"false"`
-	Longitude float64 `json:"longitude" required:"false"`
-}
-
-type CreateBytes = []byte
-func UnmarshalCreate(data []byte, v *Create) *runtime.Error {
-	 return runtime.JsonUnmarshal(data, v)
-}
-func CreateBytesToCreate(data []byte) (*Create, *runtime.Error) {
-	var v Create
-	if err := runtime.JsonUnmarshal(data, &v); err != nil {
-		return nil, err
-	}
-	return &v, nil
-}
-
 // definition: DB.Geo@Full
 type Full struct {
 	Id string `json:"id" required:"false"`
