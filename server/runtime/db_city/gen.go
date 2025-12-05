@@ -5,9 +5,56 @@ import (
 	"github.com/ootiny/capi/server/runtime"
 )
 
+// definition: DB.City@Create
+type Create struct {
+	Active bool `json:"active" required:"false"`
+	Age int64 `json:"age" required:"true"`
+	Area float64 `json:"area" required:"true"`
+	Geo db_geo.Create `json:"geo" required:"false"`
+	Geo_list db_geo.Create `json:"geo_list" required:"true"`
+	Geo_map db_geo.Create `json:"geo_map" required:"true"`
+	Id string `json:"id" required:"true"`
+	Name string `json:"name" required:"true"`
+	Name_16 string `json:"name_16" required:"true"`
+	Name_256 string `json:"name_256" required:"true"`
+	Name_32 string `json:"name_32" required:"true"`
+	Name_64 string `json:"name_64" required:"true"`
+	Str_list []string `json:"str_list" required:"true"`
+	Str_map map[string]string `json:"str_map" required:"true"`
+}
+
+type CreateBytes = []byte
+func UnmarshalCreate(data []byte, v *Create) *runtime.Error {
+	 return runtime.JsonUnmarshal(data, v)
+}
+func CreateBytesToCreate(data []byte) (*Create, *runtime.Error) {
+	var v Create
+	if err := runtime.JsonUnmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
+// definition: DB.City@Delete
+type Delete struct {
+	Id string `json:"id" required:"true"`
+}
+
+type DeleteBytes = []byte
+func UnmarshalDelete(data []byte, v *Delete) *runtime.Error {
+	 return runtime.JsonUnmarshal(data, v)
+}
+func DeleteBytesToDelete(data []byte) (*Delete, *runtime.Error) {
+	var v Delete
+	if err := runtime.JsonUnmarshal(data, &v); err != nil {
+		return nil, err
+	}
+	return &v, nil
+}
+
 // definition: DB.City@Full
 type Full struct {
-	Id string `json:"id" required:"false"`
+	Id string `json:"id" required:"true"`
 	Name_16 string `json:"name_16" required:"true"`
 	Name_32 string `json:"name_32" required:"true"`
 	Name_64 string `json:"name_64" required:"true"`
@@ -37,7 +84,7 @@ func FullBytesToFull(data []byte) (*Full, *runtime.Error) {
 
 // definition: DB.City@Simple
 type Simple struct {
-	Id string `json:"id" required:"false"`
+	Id string `json:"id" required:"true"`
 	Name string `json:"name" required:"true"`
 }
 

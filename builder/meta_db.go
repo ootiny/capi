@@ -85,18 +85,75 @@ func (p *DBTableMeta) GetFilePath() string {
 	return p.__filepath__
 }
 
+// convert columns to APIDefinitionMeta
+func (p *DBTableMeta) toAPIDefinitionMeta(columns []string, defaultView string) (*APIDefinitionMeta, error) {
+	attributes := []*APIDefinitionAttributeMeta{}
+
+	for _, column := range columns {
+		columnName := ""
+		columnType := ""
+		columnArray := strings.Split(column, "@")
+		if len(columnArray) == 1 {
+			columnName = columnArray[0]
+
+			if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, defaultView); err != nil {
+				return nil, err
+			} else {
+				columnType = apiType
+			}
+		} else {
+			columnName = columnArray[0]
+			if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, columnArray[1]); err != nil {
+				return nil, err
+			} else {
+				columnType = apiType
+			}
+		}
+
+		attributes = append(attributes, &APIDefinitionAttributeMeta{
+			Name:     columnName,
+			Type:     columnType,
+			Required: p.Columns[columnName].Required,
+		})
+	}
+
+	return &APIDefinitionMeta{
+		Attributes: attributes,
+	}, nil
+}
+
 func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 	definitions := map[string]*APIDefinitionMeta{}
 
-	// check predefined views
+	// build create definition
 	if _, ok := p.Views["Create"]; ok {
 		return nil, fmt.Errorf("Create view can not be defined")
 	}
+	columnNames := []string{}
+	for k := range p.Columns {
+		columnNames = append(columnNames, k)
+	}
+	sort.Strings(columnNames)
+	if apiDefinition, err := p.toAPIDefinitionMeta(columnNames, "Create"); err != nil {
+		return nil, err
+	} else {
+		definitions["Create"] = apiDefinition
+	}
 
+	// build delete definition
 	if _, ok := p.Views["Delete"]; ok {
 		return nil, fmt.Errorf("Delete view can not be defined")
 	}
+	if apiDefinition, err := p.toAPIDefinitionMeta([]string{"id"}, "Delete"); err != nil {
+		return nil, err
+	} else {
+		if len(apiDefinition.Attributes) == 1 {
+			apiDefinition.Attributes[0].Required = true
+		}
+		definitions["Delete"] = apiDefinition
+	}
 
+	// check predefined views
 	if _, ok := p.Views["Update"]; ok {
 		return nil, fmt.Errorf("Update view can not be defined")
 	}
@@ -105,54 +162,12 @@ func (p *DBTableMeta) ToAPIMeta() (*APIMeta, error) {
 		return nil, fmt.Errorf("Query view can not be defined")
 	}
 
-	// define create view and delete view
-	// createViewColumns := []string{}
-	// for columnName := range p.Columns {
-	// 	createViewColumns = append(createViewColumns, columnName)
-	// }
-	// views := map[string]*DBTableViewMeta{
-	// 	"Create": {
-	// 		Columns: createViewColumns,
-	// 	},
-	// 	"Delete": {
-	// 		Columns: []string{"id"},
-	// 	},
-	// }
-	// maps.Copy(views, p.Views)
-
 	// convert views
 	for name, view := range p.Views {
-		attributes := []*APIDefinitionAttributeMeta{}
-
-		for _, column := range view.Columns {
-			columnName := ""
-			columnType := ""
-			columnArray := strings.Split(column, "@")
-			if len(columnArray) == 1 {
-				columnName = columnArray[0]
-
-				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, ""); err != nil {
-					return nil, err
-				} else {
-					columnType = apiType
-				}
-			} else {
-				columnName = columnArray[0]
-				if apiType, err := DBTypeToApiType(p.Columns[columnName].Type, columnArray[1]); err != nil {
-					return nil, err
-				} else {
-					columnType = apiType
-				}
-			}
-
-			attributes = append(attributes, &APIDefinitionAttributeMeta{
-				Name:     columnName,
-				Type:     columnType,
-				Required: p.Columns[columnName].Required,
-			})
-		}
-		definitions[name] = &APIDefinitionMeta{
-			Attributes: attributes,
+		if apiDefinition, err := p.toAPIDefinitionMeta(view.Columns, ""); err != nil {
+			return nil, err
+		} else {
+			definitions[name] = apiDefinition
 		}
 	}
 

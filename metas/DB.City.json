@@ -3,7 +3,7 @@
   "table": "DB.City",
   "description": "City db model",
   "columns": {
-    "id": { "type": "PK", "query": ["=", "in"] },
+    "id": { "type": "PK", "query": ["=", "in"], "required": true },
     "name_16": {
       "type": "String16",
       "query": ["=", "in", "like"],

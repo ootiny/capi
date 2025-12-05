@@ -11,13 +11,6 @@ type CityList struct {
 	List []db_city.Full `json:"list" required:"true"`
 }
 
-// Action: API.System.City:Delete
-var fnDelete FuncDelete
-type FuncDelete = func(ctx *runtime.Context, v db_city.Delete) (db_city.Delete, *runtime.Error)
-func OnDelete (fn FuncDelete) {
-	fnDelete = fn
-}
-
 // Action: API.System.City:Update
 var fnUpdate FuncUpdate
 type FuncUpdate = func(ctx *runtime.Context, v db_city.Update) (db_city.Update, *runtime.Error)
@@ -39,23 +32,14 @@ func OnCreate (fn FuncCreate) {
 	fnCreate = fn
 }
 
-func init() {
-	runtime.RegisterHandler("API.System.City:Delete", func(ctx *runtime.Context, data []byte) *runtime.Return {
-		var v struct {
-			V db_city.Delete `json:"v" required:"true"`
-		}
-		if err := runtime.JsonUnmarshal(data, &v); err != nil {
-			return nil
-		}
+// Action: API.System.City:Delete
+var fnDelete FuncDelete
+type FuncDelete = func(ctx *runtime.Context, v db_city.Delete) (db_city.Delete, *runtime.Error)
+func OnDelete (fn FuncDelete) {
+	fnDelete = fn
+}
 
-		if fnDelete == nil {
-			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Delete is not implemented"}
-		} else if result, err := fnDelete(ctx, v.V); err != nil {
-			return &runtime.Return{Code: err.Code(), Message: err.Error()}
-		} else {
-			return &runtime.Return{Data: result}
-		}
-	})
+func init() {
 	runtime.RegisterHandler("API.System.City:Update", func(ctx *runtime.Context, data []byte) *runtime.Return {
 		var v struct {
 			V db_city.Update `json:"v" required:"true"`
@@ -99,6 +83,22 @@ func init() {
 		if fnCreate == nil {
 			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Create is not implemented"}
 		} else if result, err := fnCreate(ctx, v.City); err != nil {
+			return &runtime.Return{Code: err.Code(), Message: err.Error()}
+		} else {
+			return &runtime.Return{Data: result}
+		}
+	})
+	runtime.RegisterHandler("API.System.City:Delete", func(ctx *runtime.Context, data []byte) *runtime.Return {
+		var v struct {
+			V db_city.Delete `json:"v" required:"true"`
+		}
+		if err := runtime.JsonUnmarshal(data, &v); err != nil {
+			return nil
+		}
+
+		if fnDelete == nil {
+			return &runtime.Return{Code: runtime.ErrActionNotImplemented, Message: "API.System.City:Delete is not implemented"}
+		} else if result, err := fnDelete(ctx, v.V); err != nil {
 			return &runtime.Return{Code: err.Code(), Message: err.Error()}
 		} else {
 			return &runtime.Return{Data: result}
