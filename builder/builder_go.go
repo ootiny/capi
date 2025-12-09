@@ -93,6 +93,7 @@ func (p *GoBuilder) BuildServer(ctx *BuildContext) (map[string]string, error) {
 			"assets/go/server_db_common.go",
 			"assets/go/server_db_manager.go",
 			"assets/go/server_db_tx.go",
+			"assets/go/server_json.go",
 		},
 	)
 	if err != nil {
